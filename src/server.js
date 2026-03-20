@@ -15,8 +15,11 @@ const validateContentType = require('./middleware/validate');
 app.use(validateContentType);
 app.use(limiter);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Image Processing API with OpenRouter Vision' });
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'JARVIS OS API v2' });
 });
 
 const describeRouter = require('./routes/describe');
