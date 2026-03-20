@@ -1,0 +1,107 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Image Processing API with OpenAI Vision",
+    "version": "1.0.0",
+    "description": "API for processing images using OpenAI Vision to generate textual descriptions"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/v1/describe": {
+      "post": {
+        "summary": "Describe an image using OpenAI Vision",
+        "description": "Upload an image and receive a textual description from GPT-4 Vision",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "image",
+            "type": "file",
+            "required": true,
+            "description": "The image file to describe (JPEG or PNG, max 10MB)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image description generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string",
+                      "description": "The textual description of the image"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - no file provided or invalid file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error - OpenAI API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Image Processing"
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ImageDescription": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Textual description of the image"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Image Processing",
+      "description": "Endpoints for image processing and analysis"
+    }
+  ]
+}
