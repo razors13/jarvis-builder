@@ -1,505 +1,321 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Odontograma — Jarvis OS</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #0a0a0a;
-      color: #e0e0e0;
-      padding: 20px;
-      min-height: 100vh;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding: 20px;
-      background: rgba(127, 119, 221, 0.1);
-      border-radius: 12px;
-      border: 1px solid rgba(127, 119, 221, 0.3);
-    }
-    .header h1 {
-      font-size: 24px;
-      color: #7F77DD;
-    }
-    .header .patient-name {
-      font-size: 18px;
-      color: #e0e0e0;
-      margin-top: 5px;
-    }
-    .buttons {
-      display: flex;
-      gap: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-save {
-      background: #7F77DD;
-      color: white;
-    }
-    .btn-save:hover {
-      background: #6B63C5;
-      transform: translateY(-1px);
-    }
-    .btn-back {
-      background: rgba(255, 255, 255, 0.1);
-      color: #e0e0e0;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .btn-back:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-    .message {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 25px;
-      background: #7F77DD;
-      color: white;
-      border-radius: 8px;
-      font-weight: 600;
-      opacity: 0;
-      transform: translateY(-20px);
-      transition: all 0.3s;
-      z-index: 1000;
-    }
-    .message.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .legend {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      flex-wrap: wrap;
-    }
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-    }
-    .legend-color {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .odontograma {
-      display: flex;
-      flex-direction: column;
-      gap: 40px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-    .arch {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .tooth {
-      position: relative;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    .tooth:hover {
-      transform: scale(1.05);
-    }
-    .tooth-number {
-      position: absolute;
-      top: -20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      font-weight: 600;
-      color: #7F77DD;
-    }
-    .arch.lower .tooth-number {
-      top: auto;
-      bottom: -20px;
-    }
-    svg {
-      display: block;
-    }
-    .surface {
-      cursor: pointer;
-      transition: fill 0.2s;
-    }
-    .surface:hover {
-      opacity: 0.8;
-    }
-    .tools {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding: 15px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      flex-wrap: wrap;
-    }
-    .tool-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid transparent;
-      border-radius: 6px;
-      color: #e0e0e0;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .tool-btn.active {
-      border-color: #7F77DD;
-      background: rgba(127, 119, 221, 0.2);
-    }
-    .tool-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #7F77DD;
-      font-size: 18px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odontograma — Jarvis OS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;padding:20px;min-height:100vh}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding:16px 20px;background:rgba(127,119,221,.1);border-radius:12px;border:1px solid rgba(127,119,221,.3)}
+.header h1{font-size:20px;color:#7F77DD}
+.patient-name{font-size:15px;color:#e0e0e0;margin-top:4px}
+.buttons{display:flex;gap:10px}
+button{padding:8px 18px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-save{background:#7F77DD;color:#fff}
+.btn-save:hover{background:#6B63C5}
+.btn-back{background:rgba(255,255,255,.08);color:#e0e0e0;border:1px solid rgba(255,255,255,.15)}
+.message{position:fixed;top:20px;right:20px;padding:12px 20px;background:#7F77DD;color:#fff;border-radius:8px;font-weight:600;opacity:0;transform:translateY(-20px);transition:all .3s;z-index:1000}
+.message.show{opacity:1;transform:translateY(0)}
+.legend{display:flex;gap:16px;margin-bottom:14px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:8px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px}
+.lc{width:14px;height:14px;border-radius:3px}
+.tools{display:flex;gap:8px;margin-bottom:20px;padding:12px 16px;background:rgba(255,255,255,.04);border-radius:8px;flex-wrap:wrap}
+.tool-btn{padding:6px 14px;background:rgba(255,255,255,.08);border:2px solid transparent;border-radius:6px;color:#e0e0e0;font-size:12px;cursor:pointer;transition:all .2s}
+.tool-btn.active{border-color:#7F77DD;background:rgba(127,119,221,.2)}
+.odontograma{display:flex;flex-direction:column;gap:30px;max-width:1400px;margin:0 auto}
+.arch-label{font-size:10px;color:#555;text-align:center;margin-bottom:4px}
+.arch{display:flex;justify-content:center;gap:4px;flex-wrap:wrap}
+.tooth-unit{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+.tooth-num{font-size:9px;color:#7F77DD;font-weight:600;text-align:center;line-height:1.4}
+.tooth-name{font-size:7px;color:#444;text-align:center;line-height:1.2}
+svg{overflow:visible;display:block}
+.divider{height:1px;background:rgba(127,119,221,.2);margin:0}
+.info-bar{background:rgba(255,255,255,.04);border-radius:6px;padding:6px 12px;font-size:11px;color:#666;margin-bottom:14px}
+</style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>📋 Odontograma Clínico</h1>
-      <div class="patient-name" id="patientName">Cargando...</div>
-    </div>
-    <div class="buttons">
-      <button class="btn-save" onclick="saveOdontograma()">💾 Guardar</button>
-      <button class="btn-back" onclick="goBack()">← Volver</button>
-    </div>
+
+<div class="header">
+  <div>
+    <h1>Odontograma Clinico</h1>
+    <div class="patient-name" id="patientName">Cargando...</div>
   </div>
-
-  <div class="message" id="message"></div>
-
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-color" style="background: #e8e0c8;"></div>
-      <span>Sano</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #E24B4A;"></div>
-      <span>Caries</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #378ADD;"></div>
-      <span>Restaurado</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #EF9F27;"></div>
-      <span>Corona</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #D4537E;"></div>
-      <span>Endodoncia</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #7F77DD;"></div>
-      <span>Implante</span>
-    </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #C8C4BA;"></div>
-      <span>Extracción</span>
-    </div>
+  <div class="buttons">
+    <button class="btn-save" onclick="saveOdontograma()">Guardar</button>
+    <button class="btn-back" onclick="goBack()">Volver</button>
   </div>
+</div>
 
-  <div class="tools">
-    <button class="tool-btn active" data-tool="sano" onclick="selectTool('sano')">Sano</button>
-    <button class="tool-btn" data-tool="caries" onclick="selectTool('caries')">Caries</button>
-    <button class="tool-btn" data-tool="restaurado" onclick="selectTool('restaurado')">Restaurado</button>
-    <button class="tool-btn" data-tool="corona" onclick="selectTool('corona')">Corona</button>
-    <button class="tool-btn" data-tool="endodoncia" onclick="selectTool('endodoncia')">Endodoncia</button>
-    <button class="tool-btn" data-tool="implante" onclick="selectTool('implante')">Implante</button>
-    <button class="tool-btn" data-tool="extraccion" onclick="selectTool('extraccion')">Extracción</button>
-  </div>
+<div class="message" id="message"></div>
 
-  <div class="odontograma">
-    <div class="arch upper" id="upperArch"></div>
-    <div class="arch lower" id="lowerArch"></div>
-  </div>
+<div class="legend">
+  <div class="legend-item"><div class="lc" style="background:#e8e0c8;border:1px solid #9a8e6a"></div>Sano</div>
+  <div class="legend-item"><div class="lc" style="background:#E24B4A"></div>Caries</div>
+  <div class="legend-item"><div class="lc" style="background:#378ADD"></div>Restaurado</div>
+  <div class="legend-item"><div class="lc" style="background:#EF9F27"></div>Corona</div>
+  <div class="legend-item"><div class="lc" style="background:#D4537E"></div>Endodoncia</div>
+  <div class="legend-item"><div class="lc" style="background:#7F77DD"></div>Implante</div>
+  <div class="legend-item"><div class="lc" style="background:#C8C4BA"></div>Extraccion</div>
+</div>
 
-  <script>
-    const COLORS = {
-      sano: '#e8e0c8',
-      caries: '#E24B4A',
-      restaurado: '#378ADD',
-      corona: '#EF9F27',
-      endodoncia: '#D4537E',
-      implante: '#7F77DD',
-      extraccion: '#C8C4BA'
-    };
+<div class="tools">
+  <button class="tool-btn active" data-tool="sano" onclick="setTool('sano',this)">Sano</button>
+  <button class="tool-btn" data-tool="caries" onclick="setTool('caries',this)">Caries</button>
+  <button class="tool-btn" data-tool="restaurado" onclick="setTool('restaurado',this)">Restaurado</button>
+  <button class="tool-btn" data-tool="corona" onclick="setTool('corona',this)">Corona</button>
+  <button class="tool-btn" data-tool="endodoncia" onclick="setTool('endodoncia',this)">Endodoncia</button>
+  <button class="tool-btn" data-tool="implante" onclick="setTool('implante',this)">Implante</button>
+  <button class="tool-btn" data-tool="extraccion" onclick="setTool('extraccion',this)">Extraccion</button>
+</div>
 
-    const UPPER_TEETH = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28];
-    const LOWER_TEETH = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38];
+<div class="info-bar" id="infobar">Selecciona herramienta y haz click en una superficie del diente.</div>
 
-    let currentTool = 'sano';
-    let patientId = null;
-    let patientName = '';
-    let odontogramaState = {
-      surfs: {},
-      crown: {},
-      root: {},
-      status: {}
-    };
+<div class="odontograma">
+  <div class="arch-label">SUPERIOR — Derecho &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Izquierdo</div>
+  <div class="arch" id="upper-arch"></div>
+  <div class="divider"></div>
+  <div class="arch" id="lower-arch"></div>
+  <div class="arch-label">INFERIOR — Derecho &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Izquierdo</div>
+</div>
 
-    // Obtener ID del paciente de la URL
-    const urlParams = new URLSearchParams(window.location.search);
-    patientId = urlParams.get('paciente_id');
+<script>
+const UPPER=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
+const LOWER=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
+const ALL=UPPER.concat(LOWER);
+const TNAME={18:'3M',17:'2M',16:'1M',15:'2PM',14:'1PM',13:'Can',12:'IL',11:'IC',21:'IC',22:'IL',23:'Can',24:'1PM',25:'2PM',26:'1M',27:'2M',28:'3M',48:'3M',47:'2M',46:'1M',45:'2PM',44:'1PM',43:'Can',42:'IL',41:'IC',31:'IC',32:'IL',33:'Can',34:'1PM',35:'2PM',36:'1M',37:'2M',38:'3M'};
+const TFULL={18:'3er molar',17:'2do molar',16:'1er molar',15:'2do PM',14:'1er PM',13:'Canino',12:'Inc lateral',11:'Inc central',21:'Inc central',22:'Inc lateral',23:'Canino',24:'1er PM',25:'2do PM',26:'1er molar',27:'2do molar',28:'3er molar',48:'3er molar',47:'2do molar',46:'1er molar',45:'2do PM',44:'1er PM',43:'Canino',42:'Inc lateral',41:'Inc central',31:'Inc central',32:'Inc lateral',33:'Canino',34:'1er PM',35:'2do PM',36:'1er molar',37:'2do molar',38:'3er molar'};
 
-    if (!patientId) {
-      alert('No se especificó ID de paciente');
-      window.location.href = 'index.html';
+const COL={sano:'#e8e0c8',caries:'#E24B4A',restaurado:'#378ADD',corona:'#EF9F27',endodoncia:'#D4537E',implante:'#7F77DD',extraccion:'#C8C4BA',root_sano:'#d4c8a0'};
+const STROKE={sano:'#9a8e6a',caries:'#A32D2D',restaurado:'#185FA5',corona:'#854F0B',endodoncia:'#993556',implante:'#534AB7',extraccion:'#888780',root_sano:'#9a8e6a'};
+
+let tool='sano';
+let patientId=null;
+let state={surfs:{},crown:{},root:{},status:{}};
+
+const NS='http://www.w3.org/2000/svg';
+function E(tag,a){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);return e;}
+
+function ttype(n){const d=n%10;if(d>=6)return'molar';if(d>=4)return'premolar';if(d===3)return'canine';return'incisor';}
+
+function crownPath(type){
+  if(type==='molar')return'M6,0 Q19,-2 32,0 Q38,6 38,17 Q38,28 32,34 Q19,36 6,34 Q0,28 0,17 Q0,6 6,0 Z';
+  if(type==='premolar')return'M5,0 Q15,-1 25,0 Q30,5 30,16 Q30,27 25,32 Q15,33 5,32 Q0,27 0,16 Q0,5 5,0 Z';
+  if(type==='canine')return'M3,0 Q11,-1 19,0 Q22,6 21,18 Q20,28 11,36 Q2,28 1,18 Q0,6 3,0 Z';
+  return'M3,0 Q10,-1 17,0 Q20,4 20,15 Q20,26 17,30 Q10,31 3,30 Q0,26 0,15 Q0,4 3,0 Z';
+}
+
+function crownDims(type){
+  return{molar:{w:38,h:34},premolar:{w:30,h:32},canine:{w:22,h:36},incisor:{w:20,h:30}}[type];
+}
+
+function getSurfZones(type,w,h){
+  if(type==='molar'){const r=7;return[{id:'v',x:0,y:0,w,h:r},{id:'l',x:0,y:h-r,w,h:r},{id:'m',x:0,y:r,w:r,h:h-r*2},{id:'d',x:w-r,y:r,w:r,h:h-r*2},{id:'o',x:r,y:r,w:w-r*2,h:h-r*2}];}
+  if(type==='premolar'){const r=6;return[{id:'v',x:0,y:0,w,h:r},{id:'l',x:0,y:h-r,w,h:r},{id:'m',x:0,y:r,w:r,h:h-r*2},{id:'d',x:w-r,y:r,w:r,h:h-r*2},{id:'o',x:r,y:r,w:w-r*2,h:h-r*2}];}
+  const cw=Math.floor(w/3),ch=Math.floor(h/3);
+  return[
+    {id:'mi',x:0,y:0,w:cw,h:ch},{id:'ci',x:cw,y:0,w:cw,h:ch},{id:'di',x:cw*2,y:0,w:w-cw*2,h:ch},
+    {id:'mm',x:0,y:ch,w:cw,h:ch},{id:'cm',x:cw,y:ch,w:cw,h:ch},{id:'dm',x:cw*2,y:ch,w:w-cw*2,h:ch},
+    {id:'mc',x:0,y:ch*2,w:cw,h:h-ch*2},{id:'cc',x:cw,y:ch*2,w:cw,h:h-ch*2},{id:'dc',x:cw*2,y:ch*2,w:w-cw*2,h:h-ch*2}
+  ];
+}
+
+function buildCrown(n){
+  const type=ttype(n);
+  const{w,h}=crownDims(type);
+  const pad=3;
+  const svg=E('svg',{width:w+pad*2,height:h+pad*2,viewBox:`${-pad} ${-pad} ${w+pad*2} ${h+pad*2}`});
+  svg.style.overflow='visible'; svg.style.display='block';
+
+  const defs=E('defs',{});
+  const cp=E('clipPath',{id:`cp${n}`});
+  cp.appendChild(E('path',{d:crownPath(type)}));
+  defs.appendChild(cp); svg.appendChild(defs);
+
+  // base
+  svg.appendChild(E('path',{d:crownPath(type),fill:COL.sano,stroke:'none'}));
+
+  // surfaces
+  getSurfZones(type,w,h).forEach(z=>{
+    const r=E('rect',{id:`sf${n}${z.id}`,x:z.x,y:z.y,width:z.w,height:z.h,'clip-path':`url(#cp${n})`,fill:COL.sano,stroke:'none'});
+    r.style.cursor='pointer';
+    r.onclick=e=>{e.stopPropagation();onSurf(n,z.id);};
+    svg.appendChild(r);
+  });
+
+  // overlay corona/implante/extraccion
+  const ov=E('path',{id:`ov${n}`,d:crownPath(type),fill:'transparent',stroke:'none','pointer-events':'none'});
+  svg.appendChild(ov);
+
+  // grid lines
+  const g=E('g',{'clip-path':`url(#cp${n})`,'pointer-events':'none'});
+  if(type==='molar'||type==='premolar'){
+    const r=type==='molar'?7:6;
+    [[r,0,r,h],[w-r,0,w-r,h],[0,r,w,r],[0,h-r,w,h-r]].forEach(([x1,y1,x2,y2])=>
+      g.appendChild(E('line',{x1,y1,x2,y2,stroke:'#9a8e6a','stroke-width':'0.3',opacity:'0.6'})));
+  } else {
+    const cw=Math.floor(w/3),ch=Math.floor(h/3);
+    [[cw,0,cw,h],[cw*2,0,cw*2,h],[0,ch,w,ch],[0,ch*2,w,ch*2]].forEach(([x1,y1,x2,y2])=>
+      g.appendChild(E('line',{x1,y1,x2,y2,stroke:'#9a8e6a','stroke-width':'0.3',opacity:'0.6'})));
+  }
+  svg.appendChild(g);
+
+  // X extraccion
+  const xl1=E('line',{id:`xl1${n}`,x1:4,y1:4,x2:w-4,y2:h-4,stroke:'#5F5E5A','stroke-width':'1.5','pointer-events':'none'});
+  const xl2=E('line',{id:`xl2${n}`,x1:w-4,y1:4,x2:4,y2:h-4,stroke:'#5F5E5A','stroke-width':'1.5','pointer-events':'none'});
+  xl1.style.display='none'; xl2.style.display='none';
+  svg.appendChild(xl1); svg.appendChild(xl2);
+
+  // outline
+  svg.appendChild(E('path',{d:crownPath(type),fill:'none',stroke:'#7a6e4a','stroke-width':'1.2','pointer-events':'none'}));
+  return svg;
+}
+
+function buildRoot(n,isLower){
+  const type=ttype(n);
+  const dims={molar:{w:34,h:13},premolar:{w:20,h:12},canine:{w:14,h:14},incisor:{w:12,h:12}}[type];
+  const{w,h}=dims;
+  const pad=2;
+  const svg=E('svg',{width:w+pad*2,height:h+pad*2,viewBox:`${-pad} ${-pad} ${w+pad*2} ${h+pad*2}`});
+  svg.style.display='block'; svg.style.cursor='pointer';
+  svg.onclick=()=>onRoot(n);
+
+  const cy=isLower?Math.round(h*.35):Math.round(h*.65);
+  if(type==='molar'){
+    const rx=Math.round(w*.22),ry=Math.round(h*.42);
+    svg.appendChild(E('ellipse',{id:`rt1${n}`,cx:Math.round(w*.3),cy,rx,ry,fill:COL.root_sano,stroke:STROKE.root_sano,'stroke-width':'0.8'}));
+    svg.appendChild(E('ellipse',{id:`rt2${n}`,cx:Math.round(w*.7),cy,rx,ry,fill:COL.root_sano,stroke:STROKE.root_sano,'stroke-width':'0.8'}));
+  } else {
+    svg.appendChild(E('ellipse',{id:`rt1${n}`,cx:Math.round(w/2),cy,rx:Math.round(w*.38),ry:Math.round(h*.42),fill:COL.root_sano,stroke:STROKE.root_sano,'stroke-width':'0.8'}));
+  }
+  return svg;
+}
+
+function renderCrown(n){
+  const type=ttype(n);
+  const{w,h}=crownDims(type);
+  const st=state.status[n],cr=state.crown[n],s=state.surfs[n]||{};
+  const ov=document.getElementById(`ov${n}`);
+  const xl1=document.getElementById(`xl1${n}`),xl2=document.getElementById(`xl2${n}`);
+  if(ov){
+    if(st==='extraccion'){ov.setAttribute('fill',COL.extraccion);ov.setAttribute('opacity','0.85');}
+    else if(st==='implante'){ov.setAttribute('fill',COL.implante);ov.setAttribute('opacity','0.85');}
+    else if(cr==='corona'){ov.setAttribute('fill',COL.corona);ov.setAttribute('opacity','0.85');}
+    else{ov.setAttribute('fill','transparent');ov.removeAttribute('opacity');}
+  }
+  if(xl1)xl1.style.display=st==='extraccion'?'':'none';
+  if(xl2)xl2.style.display=st==='extraccion'?'':'none';
+  getSurfZones(type,w,h).forEach(z=>{
+    const el=document.getElementById(`sf${n}${z.id}`);
+    if(!el)return;
+    if(st||cr){el.setAttribute('fill','transparent');}
+    else{el.setAttribute('fill',COL[s[z.id]||'sano']);}
+  });
+}
+
+function renderRoot(n){
+  const rc=state.root[n]==='endodoncia'?COL.endodoncia:COL.root_sano;
+  const rs=state.root[n]==='endodoncia'?STROKE.endodoncia:STROKE.root_sano;
+  ['rt1','rt2'].forEach(id=>{
+    const e=document.getElementById(`${id}${n}`);
+    if(e){e.setAttribute('fill',rc);e.setAttribute('stroke',rs);}
+  });
+}
+
+function onSurf(n,sid){
+  if(['corona','extraccion','implante'].includes(tool)){onTooth(n);return;}
+  if(tool==='endodoncia'){onRoot(n);return;}
+  if(state.status[n]||state.crown[n]==='corona')return;
+  if(!state.surfs[n])state.surfs[n]={};
+  state.surfs[n][sid]=state.surfs[n][sid]===tool?'sano':tool;
+  renderCrown(n);
+  const SN={v:'Vestibular',l:'Lingual',m:'Mesial',d:'Distal',o:'Oclusal',mi:'Mesio-Incisal',ci:'Centro-Incisal',di:'Disto-Incisal',mm:'Mesio-Medio',cm:'Centro-Medio',dm:'Disto-Medio',mc:'Mesio-Cervical',cc:'Centro-Cervical',dc:'Disto-Cervical'};
+  document.getElementById('infobar').textContent=`Diente ${n} — ${TFULL[n]} — ${SN[sid]||sid} — ${tool}`;
+}
+
+function onTooth(n){
+  if(tool==='corona'){state.crown[n]=state.crown[n]==='corona'?null:'corona';if(state.crown[n])state.surfs[n]={};}
+  else if(tool==='extraccion'){state.status[n]=state.status[n]==='extraccion'?null:'extraccion';if(state.status[n]){state.surfs[n]={};state.crown[n]=null;state.root[n]=null;}}
+  else if(tool==='implante'){state.status[n]=state.status[n]==='implante'?null:'implante';if(state.status[n]){state.surfs[n]={};state.crown[n]=null;}}
+  else if(tool==='sano'){state.surfs[n]={};state.crown[n]=null;state.status[n]=null;state.root[n]=null;}
+  renderCrown(n);renderRoot(n);
+  document.getElementById('infobar').textContent=`Diente ${n} — ${TFULL[n]} — ${tool}`;
+}
+
+function onRoot(n){
+  if(state.status[n]==='extraccion')return;
+  state.root[n]=state.root[n]==='endodoncia'?null:'endodoncia';
+  renderRoot(n);
+  document.getElementById('infobar').textContent=`Diente ${n} — ${TFULL[n]} — Raiz — ${state.root[n]?'Endodoncia':'Sin endodoncia'}`;
+}
+
+function setTool(t,btn){
+  tool=t;
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function showMessage(txt,type='success'){
+  const m=document.getElementById('message');
+  m.textContent=txt;
+  m.style.background=type==='error'?'#E24B4A':'#7F77DD';
+  m.classList.add('show');
+  setTimeout(()=>m.classList.remove('show'),3000);
+}
+
+function goBack(){window.location.href='index.html';}
+
+async function saveOdontograma(){
+  try{
+    const r=await fetch(`/api/v1/pacientes/${patientId}/odontograma`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
+    if(!r.ok)throw new Error();
+    showMessage('Odontograma guardado');
+  }catch{showMessage('Error al guardar','error');}
+}
+
+function buildArch(nums,containerId,isLower){
+  const c=document.getElementById(containerId);
+  c.innerHTML='';
+  nums.forEach(n=>{
+    const unit=document.createElement('div');
+    unit.className='tooth-unit';
+    const num=document.createElement('div');num.className='tooth-num';num.textContent=n;
+    const nm=document.createElement('div');nm.className='tooth-name';nm.textContent=TNAME[n];
+    const crown=buildCrown(n);
+    const root=buildRoot(n,isLower);
+    if(isLower){
+      unit.appendChild(crown);
+      unit.appendChild(nm);
+      unit.appendChild(num);
+      unit.appendChild(root);
+    } else {
+      unit.appendChild(root);
+      unit.appendChild(num);
+      unit.appendChild(nm);
+      unit.appendChild(crown);
     }
+    c.appendChild(unit);
+  });
+  ALL.forEach(n=>{renderCrown(n);renderRoot(n);});
+}
 
-    // Cargar datos del paciente
-    async function loadPatientData() {
-      try {
-        const response = await fetch(`/api/v1/pacientes/${patientId}/odontograma`);
-        if (!response.ok) throw new Error('Error al cargar datos');
-        
-        const data = await response.json();
-        patientName = data.nombre;
-        document.getElementById('patientName').textContent = data.nombre;
-        
-        if (data.odontograma) {
-          odontogramaState = {
-            surfs: data.odontograma.surfs || {},
-            crown: data.odontograma.crown || {},
-            root: data.odontograma.root || {},
-            status: data.odontograma.status || {}
-          };
-        }
-        
-        renderOdontograma();
-      } catch (error) {
-        console.error('Error:', error);
-        showMessage('Error al cargar datos del paciente', 'error');
-      }
+async function loadPatientData(){
+  const params=new URLSearchParams(window.location.search);
+  patientId=params.get('paciente_id');
+  if(!patientId){alert('No se especifico ID de paciente');window.location.href='index.html';return;}
+  try{
+    const r=await fetch(`/api/v1/pacientes/${patientId}/odontograma`);
+    const data=await r.json();
+    document.getElementById('patientName').textContent=data.nombre;
+    if(data.odontograma&&Object.keys(data.odontograma).length){
+      state={surfs:data.odontograma.surfs||{},crown:data.odontograma.crown||{},root:data.odontograma.root||{},status:data.odontograma.status||{}};
     }
+  }catch(e){console.error(e);}
+  buildArch(UPPER,'upper-arch',false);
+  buildArch(LOWER,'lower-arch',true);
+}
 
-    function selectTool(tool) {
-      currentTool = tool;
-      document.querySelectorAll('.tool-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tool === tool);
-      });
-    }
-
-    function showMessage(text, type = 'success') {
-      const msg = document.getElementById('message');
-      msg.textContent = text;
-      msg.style.background = type === 'error' ? '#E24B4A' : '#7F77DD';
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 3000);
-    }
-
-    function goBack() {
-      window.location.href = 'index.html';
-    }
-
-    async function saveOdontograma() {
-      try {
-        const response = await fetch(`/api/v1/pacientes/${patientId}/odontograma`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(odontogramaState)
-        });
-        
-        if (!response.ok) throw new Error('Error al guardar');
-        
-        showMessage('✓ Odontograma guardado exitosamente');
-      } catch (error) {
-        console.error('Error:', error);
-        showMessage('Error al guardar odontograma', 'error');
-      }
-    }
-
-    function isPosterior(toothNum) {
-      const lastDigit = toothNum % 10;
-      return lastDigit >= 4 && lastDigit <= 8;
-    }
-
-    function createPosteriorTooth(toothNum) {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', '60');
-      svg.setAttribute('height', '80');
-      svg.setAttribute('viewBox', '0 0 60 80');
-
-      // Corona con superficies
-      const surfaces = [
-        { id: 'o', d: 'M20,25 L40,25 L40,45 L20,45 Z', label: 'O' }, // Oclusal
-        { id: 'm', d: 'M15,20 L20,25 L20,45 L15,50 Z', label: 'M' }, // Mesial
-        { id: 'd', d: 'M40,25 L45,20 L45,50 L40,45 Z', label: 'D' }, // Distal
-        { id: 'v', d: 'M20,25 L15,20 L45,20 L40,25 Z', label: 'V' }, // Vestibular
-        { id: 'l', d: 'M20,45 L15,50 L45,50 L40,45 Z', label: 'L' }  // Lingual
-      ];
-
-      surfaces.forEach(surf => {
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        path.setAttribute('d', surf.d);
-        path.setAttribute('class', 'surface');
-        path.setAttribute('data-tooth', toothNum);
-        path.setAttribute('data-surface', surf.id);
-        
-        const state = odontogramaState.surfs[toothNum]?.[surf.id] || 'sano';
-        path.setAttribute('fill', COLORS[state]);
-        path.setAttribute('stroke', '#333');
-        path.setAttribute('stroke-width', '1');
-        
-        path.addEventListener('click', () => handleSurfaceClick(toothNum, surf.id));
-        svg.appendChild(path);
-      });
-
-      // Raíces
-      const root1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      root1.setAttribute('d', 'M22,50 L25,75 L20,75 Z');
-      root1.setAttribute('class', 'surface');
-      root1.setAttribute('data-tooth', toothNum);
-      root1.setAttribute('data-type', 'root');
-      const rootState = odontogramaState.root[toothNum] || 'sano';
-      root1.setAttribute('fill', COLORS[rootState]);
-      root1.setAttribute('stroke', '#333');
-      root1.addEventListener('click', () => handleRootClick(toothNum));
-      svg.appendChild(root1);
-
-      const root2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      root2.setAttribute('d', 'M38,50 L40,75 L35,75 Z');
-      root2.setAttribute('class', 'surface');
-      root2.setAttribute('data-tooth', toothNum);
-      root2.setAttribute('data-type', 'root');
-      root2.setAttribute('fill', COLORS[rootState]);
-      root2.setAttribute('stroke', '#333');
-      root2.addEventListener('click', () => handleRootClick(toothNum));
-      svg.appendChild(root2);
-
-      return svg;
-    }
-
-    function createAnteriorTooth(toothNum) {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', '50');
-      svg.setAttribute('height', '80');
-      svg.setAttribute('viewBox', '0 0 50 80');
-
-      // Corona con 9 zonas (3x3)
-      const zones = [
-        { id: 'vi', x: 10, y: 15, w: 10, h: 12 }, // Vestibular Incisal
-        { id: 'vm', x: 10, y: 27, w: 10, h: 12 }, // Vestibular Medio
-        { id: 'vc', x: 10, y: 39, w: 10, h: 12 }, // Vestibular Cervical
-        { id: 'i', x: 20, y: 15, w: 10, h: 12 },  // Incisal
-        { id: 'c', x: 20, y: 27, w: 10, h: 12 },  // Centro
-        { id: 'cc', x: 20, y: 39, w: 10, h: 12 }, // Centro Cervical
-        { id: 'li', x: 30, y: 15, w: 10, h: 12 }, // Lingual Incisal
-        { id: 'lm', x: 30, y: 27, w: 10, h: 12 }, // Lingual Medio
-        { id: 'lc', x: 30, y: 39, w: 10, h: 12 }  // Lingual Cervical
-      ];
-
-      zones.forEach(zone => {
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        rect.setAttribute('x', zone.x);
-        rect.setAttribute('y', zone.y);
-        rect.setAttribute('width', zone.w);
-        rect.setAttribute('height', zone.h);
-        rect.setAttribute('class', 'surface');
-        rect.setAttribute('data-tooth', toothNum);
-        rect.setAttribute('data-surface', zone.id);
-        
-        const state = odontogramaState.surfs[toothNum]?.[zone.id] || 'sano';
-        rect.setAttribute('fill', COLORS[state]);
-        rect.setAttribute('stroke', '#333');
-        rect.setAttribute('stroke-width', '1');
-        
-        rect.addEventListener('click', () => handleSurfaceClick(toothNum, zone.id));
-        svg.appendChild(rect);
-      });
-
-      // Raíz única
-      const root = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      root.setAttribute('d', 'M20,51 L25,75 L15,75 Z');
-      root.setAttribute('class', 'surface');
-      root.setAttribute('data-tooth', toothNum);
-      root.setAttribute('data-type', 'root');
-      const rootState = odontogramaState.root[toothNum] || 'sano';
-      root.setAttribute('fill', COLORS[rootState]);
-      root.setAttribute('stroke', '#333');
-      root.addEventListener('click', () => handleRootClick(toothNum));
-      svg.appendChild(root);
-
-      return svg;
-    }
-
-    function handleSurfaceClick(toothNum, surfaceId) {
-      if (!odontogramaState.surfs[toothNum]) {
-        odontogramaState.surfs[toothNum] = {};
-      }
-      odontogramaState.surfs[toothNum][surfaceId] = currentTool;
-      renderOdontograma();
-    }
-
-    function handleRootClick(toothNum) {
-      odontogramaState.root[toothNum] = currentTool;
-      renderOdontograma();
-    }
-
-    function renderOdontograma() {
-      const upperArch = document.getElementById('upperArch');
-      const lowerArch = document.getElementById('lowerArch');
-      
-      upperArch.innerHTML = '';
-      lowerArch.innerHTML = '';
-
-      UPPER_TEETH.forEach(toothNum => {
-        const container = document.createElement('div');
-        container.className = 'tooth';
-        
-        const number = document.createElement('div');
-        number.className = 'tooth-number';
-        number.textContent = toothNum;
-        container.appendChild(number);
-        
-        const svg = isPosterior(toothNum) ? createPosteriorTooth(toothNum) : createAnteriorTooth(toothNum);
-        container.appendChild(svg);
-        
-        upperArch.appendChild(container);
-      });
-
-      LOWER_TEETH.forEach(toothNum => {
-        const container = document.createElement('div');
-        container.className = 'tooth';
-        
-        const svg = isPosterior(toothNum) ? createPosteriorTooth(toothNum) : createAnteriorTooth(toothNum);
-        container.appendChild(svg);
-        
-        const number = document.createElement('div');
-        number.className = 'tooth-number';
-        number.textContent = toothNum;
-        container.appendChild(number);
-        
-        lowerArch.appendChild(container);
-      });
-    }
-
-    // Inicializar
-    loadPatientData();
-  </script>
+loadPatientData();
+</script>
 </body>
 </html>
