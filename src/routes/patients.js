@@ -250,4 +250,39 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// GET /api/v1/pacientes/:id/odontograma
+// ---------------------------------------------------------------------------
+router.get('/:id/odontograma', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID invalido' });
+    const { data, error } = await supabase
+      .from('pacientes')
+      .select('id, nombre, odontograma')
+      .eq('id', id)
+      .single();
+    if (error) return res.status(404).json({ error: 'Paciente no encontrado' });
+    res.json({ id: data.id, nombre: data.nombre, odontograma: data.odontograma || {} });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/v1/pacientes/:id/odontograma
+// ---------------------------------------------------------------------------
+router.put('/:id/odontograma', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: 'ID invalido' });
+    const { data, error } = await supabase
+      .from('pacientes')
+      .update({ odontograma: req.body, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('id, nombre, odontograma')
+      .single();
+    if (error) throw error;
+    res.json({ message: 'Odontograma guardado', paciente: data.nombre, odontograma: data.odontograma });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

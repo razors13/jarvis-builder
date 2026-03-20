@@ -604,6 +604,15 @@
         if (col.type === 'date')     { td.textContent = formatDate(val); }
         else if (col.type === 'currency') { td.textContent = formatCurrency(val); }
         else if (col.type === 'estado')   { td.innerHTML  = estadoBadge(val); }
+        else if (col.type === 'actions')  {
+          var btnOdonto = document.createElement('button');
+          btnOdonto.style.cssText = 'padding:4px 10px;border-radius:6px;border:1px solid #7F77DD;background:transparent;color:#7F77DD;font-size:12px;cursor:pointer';
+          btnOdonto.textContent = 'Odontograma';
+          btnOdonto.onclick = function() {
+            window.open('/odontograma.html?paciente_id=' + row.id, '_blank');
+          };
+          td.appendChild(btnOdonto);
+        }
         else { td.textContent = (val != null ? val : '-'); }
         tr.appendChild(td);
       });
@@ -618,7 +627,8 @@
     { key: 'rut',      label: 'RUT' },
     { key: 'telefono', label: 'Telefono' },
     { key: 'estado',   label: 'Estado', type: 'estado' },
-    { key: 'created_at', label: 'Registro', type: 'date' }
+    { key: 'created_at', label: 'Registro', type: 'date' },
+    { key: 'acciones', label: 'Acciones', type: 'actions' }
   ];
 
   var COLS_CITAS = [
