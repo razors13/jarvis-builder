@@ -19,6 +19,14 @@ app.get('/', (req, res) => {
 
 const describeRouter = require('./routes/describe');
 app.use('/api/v1', describeRouter);
+const patientsRouter = require('./routes/patients');
+app.use('/api/v1/pacientes', patientsRouter);
+const appointmentsRouter = require('./routes/appointments');
+app.use('/api/v1/citas', appointmentsRouter);
+const quotesRouter = require('./routes/quotes');
+app.use('/api/v1/presupuestos', quotesRouter);
+const chatRouter = require('./routes/chat');
+app.use('/api/v1/chat', chatRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
