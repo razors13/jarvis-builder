@@ -1,256 +1,174 @@
 // src/routes/chat.js
-// JARVIS OS - Router Inteligente Central
-// Recibe mensaje en lenguaje natural, clasifica la intencion,
-// ejecuta la accion correspondiente y responde como Jarvis.
-// Como un smart order router: analiza el input y lo envia
-// al modulo correcto sin que el usuario sepa que existe.
+// JARVIS OS v2 - Compañero estratégico de Kevin Estay
+// Multi-agente: DENT | BIZ | BUILDER | EXEC | STRATEGY
 
 const express = require('express');
 const router = express.Router();
-const OpenAI = require('openai');
+const { chat: llmChat } = require('../lib/llm');
 
-const client = new OpenAI({
-  apiKey: process.env.OPENROUTER_API_KEY,
-  baseURL: 'https://openrouter.ai/api/v1',
-  defaultHeaders: {
-    'HTTP-Referer': 'http://localhost:3000',
-    'X-Title': 'Jarvis OS'
+// ---------------------------------------------------------------------------
+// DETECCION DE AGENTE
+// ---------------------------------------------------------------------------
+const AGENT_PATTERNS = {
+  DENT: [/dent|diente|molar|incisal|estratif|resina|compos|kerr|palfique|3m|z350|endodo|corona|implant|clase\s?(i|ii|iii|iv|v)|esmalte|dentina|pulpa|carie|restaur|blanquea|ortod|protesis|radiograf|limpieza|extrac/i],
+  BIZ:  [/thinkof|3d|impresi|souvenir|miner|cliente|precio|venta|producto|branding|merch|cotiz|pedido|negocio|empresa|b2b|marketing|logo|prototip/i],
+  BUILDER: [/codigo|api|node|express|endpoint|supabase|deploy|bug|error|ruta|modulo|backend|frontend|base de datos|sql|json|servidor|npm|git|funcion|variable/i],
+  EXEC: [/pasos|como hago|por donde|priorit|urgente|primero|checklist|plan|organiz|agenda|tiempo|rapido|ahora|hoy/i],
+  STRATEGY: [/escal|futuro|vision|oportunidad|crecer|sistema|largo plazo|conectar|integrar|modelo de negocio|posicion|diferenci/i]
+};
+
+function detectarAgentes(mensaje) {
+  const activos = [];
+  for (const [agente, patterns] of Object.entries(AGENT_PATTERNS)) {
+    if (patterns.some(p => p.test(mensaje))) activos.push(agente);
   }
-});
-
-const MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
-
-// ---------------------------------------------------------------------------
-// CONTEXTO DEL SISTEMA
-// Lo que Jarvis sabe sobre el negocio. Expandir con datos reales.
-// ---------------------------------------------------------------------------
-const SYSTEM_PROMPT = `Eres Jarvis, el asistente inteligente de una empresa que tiene dos negocios:
-
-1. CLINICA ODONTOLOGICA: Atiende pacientes dentales. Maneja fichas de pacientes, 
-   citas dentales y presupuestos de tratamientos.
-
-2. EMPRESA DE IMPRESION 3D: Fabrica souvenirs y productos personalizados para 
-   empresas mineras. Analiza imagenes de productos, genera cotizaciones 3D,
-   y maneja pedidos.
-
-Tu trabajo es:
-- Entender lo que necesita el usuario en lenguaje natural
-- Clasificar si es una tarea de CLINICA o EMPRESA
-- Identificar la accion especifica que se necesita
-- Responder de forma util, directa y profesional en espanol
-
-IMPORTANTE: Responde SOLO en JSON valido con esta estructura exacta:
-{
-  "modulo": "clinica" | "empresa" | "general",
-  "accion": "string",
-  "parametros": {},
-  "respuesta_usuario": "string",
-  "requiere_datos_adicionales": boolean,
-  "datos_faltantes": ["string"]
+  return activos.length > 0 ? activos : ['EXEC'];
 }
 
-Acciones disponibles:
-CLINICA:
-- crear_paciente: registrar nuevo paciente
-- buscar_paciente: buscar por nombre o RUT
-- crear_cita: agendar cita dental
-- ver_citas: consultar citas de un paciente o fecha
-- disponibilidad: ver horarios disponibles
-- crear_presupuesto: generar presupuesto de tratamiento
-- ver_presupuesto: consultar presupuesto existente
+// ---------------------------------------------------------------------------
+// PROMPTS POR AGENTE
+// ---------------------------------------------------------------------------
+const AGENT_PROMPTS = {
+  DENT: `Eres JARVIS DENT, el compañero clinico de Kevin Estay, odontologo estetico.
+Kevin trabaja con: Kerr Harmonize, Palfique LX5, 3M Filtek Z350 XT.
+Tecnica de estratificacion anatomica por capas.
+Responde como colega al lado del sillon: diagnostico, plan, capas con espesores, tips, errores a evitar.`,
 
-EMPRESA:
-- analizar_imagen: analizar imagen de producto (requiere imagen)
-- cotizar_producto: generar cotizacion de impresion 3D
-- ver_pedido: consultar estado de pedido
-- crear_pedido: registrar nuevo pedido
+  BIZ: `Eres JARVIS BIZ, socio estrategico de ThinkOf.
+ThinkOf: impresion 3D, souvenirs y merchandising para empresas mineras, branding corporativo B2B.
+Target: empresas grandes del norte de Chile (mineria, construccion).
+Responde: idea → cliente objetivo → precio → estrategia → bundle.`,
 
-GENERAL:
-- consulta_general: pregunta que no requiere accion especifica
-- ayuda: explicar que puede hacer Jarvis`;
+  BUILDER: `Eres JARVIS BUILDER, el CTO interno de Kevin.
+Stack: Node.js + Express, OpenRouter/Anthropic, modulos: patients, appointments, quotes, describe, chat.
+GitHub: razors13/jarvis-builder. Proximo: Supabase.
+Responde: problema → solucion → codigo ejecutable → siguiente mejora.`,
+
+  EXEC: `Eres JARVIS EXEC. Kevin no necesita motivacion, necesita claridad.
+Responde siempre: Paso 1, Paso 2, Paso 3. Sin teoria. Sin relleno.`,
+
+  STRATEGY: `Eres JARVIS STRATEGY.
+Kevin tiene 3 negocios conectados: Clinica estetica + ThinkOf 3D + Jarvis OS (SaaS potencial).
+Conectas puntos que parecen separados. Piensas en escala, no en tareas.`
+};
+
+function buildSystemPrompt(agentes) {
+  const intro = `Eres JARVIS OS, sistema multi-agente de Kevin Estay.
+Kevin: odontologo estetico, fundador de ThinkOf (3D para mineria), builder tecnologico.
+Sistemas > tareas. Accion > teoria.
+
+Reglas:
+- Compañero estrategico, no asistente generico
+- Directo, elegante, sin relleno
+- Frases como: "Aqui esta la jugada", "Vamos a hacer esto simple", "Esto es lo importante"
+- Al final de cada respuesta incluye:
+  CHECKLIST (maximo 3 puntos clave)
+  SIGUIENTE PASO (accion concreta e inmediata)
+
+Agentes activos: ${agentes.join(' + ')}
+`;
+  return intro + '\n\n' + agentes.map(a => AGENT_PROMPTS[a]).join('\n\n---\n\n');
+}
 
 // ---------------------------------------------------------------------------
-// HISTORIAL DE CONVERSACION (en memoria por sesion)
-// En produccion: persistir en Supabase por session_id
+// HISTORIAL POR SESION
 // ---------------------------------------------------------------------------
 const conversaciones = new Map();
-const MAX_HISTORIAL = 10; // ultimos 10 turnos por sesion
+const MAX_HISTORIAL = 20;
 
 function getHistorial(sessionId) {
-  if (!conversaciones.has(sessionId)) {
-    conversaciones.set(sessionId, []);
-  }
+  if (!conversaciones.has(sessionId)) conversaciones.set(sessionId, []);
   return conversaciones.get(sessionId);
 }
 
 function agregarAlHistorial(sessionId, role, content) {
   const historial = getHistorial(sessionId);
   historial.push({ role, content });
-  // Mantener solo los ultimos N turnos para no explotar el contexto
-  if (historial.length > MAX_HISTORIAL * 2) {
-    historial.splice(0, 2); // elimina el turno mas antiguo
-  }
-}
-
-// ---------------------------------------------------------------------------
-// EJECUTORES DE ACCIONES
-// Conectan la intencion clasificada con los modulos reales
-// ---------------------------------------------------------------------------
-async function ejecutarAccion(clasificacion, req) {
-  const { modulo, accion, parametros } = clasificacion;
-
-  // Importar datos en memoria de los otros modulos
-  // En produccion esto sera queries a Supabase
-  // Por ahora usamos require para acceder a los routers
-  // y ejecutamos logica directamente
-
-  switch (`${modulo}.${accion}`) {
-
-    case 'clinica.disponibilidad': {
-      const fecha = parametros.fecha || new Date().toISOString().substring(0, 10);
-      const tratamiento = parametros.tratamiento || 'consulta_general';
-      return {
-        tipo: 'disponibilidad',
-        url_sugerida: `GET /api/v1/citas/disponibilidad?fecha=${fecha}&tratamiento=${tratamiento}`,
-        mensaje: `Para ver disponibilidad usa: GET /api/v1/citas/disponibilidad?fecha=${fecha}&tratamiento=${tratamiento}`
-      };
-    }
-
-    case 'clinica.crear_cita':
-    case 'clinica.crear_paciente':
-    case 'clinica.crear_presupuesto':
-    case 'empresa.crear_pedido': {
-      const endpointMap = {
-        'clinica.crear_cita':        'POST /api/v1/citas',
-        'clinica.crear_paciente':    'POST /api/v1/pacientes',
-        'clinica.crear_presupuesto': 'POST /api/v1/presupuestos',
-        'empresa.crear_pedido':      'POST /api/v1/pedidos'
-      };
-      return {
-        tipo: 'accion_requerida',
-        endpoint: endpointMap[`${modulo}.${accion}`],
-        parametros_sugeridos: parametros,
-        mensaje: `Accion lista para ejecutar`
-      };
-    }
-
-    default:
-      return { tipo: 'informativo', mensaje: clasificacion.respuesta_usuario };
-  }
+  if (historial.length > MAX_HISTORIAL) historial.splice(0, 2);
 }
 
 // ---------------------------------------------------------------------------
 // POST /api/v1/chat
-// Body: { mensaje: string, session_id?: string }
 // ---------------------------------------------------------------------------
 router.post('/', async (req, res) => {
   try {
     const { mensaje, session_id } = req.body;
 
-    if (!mensaje || typeof mensaje !== 'string' || mensaje.trim().length === 0) {
-      return res.status(400).json({ error: 'mensaje: requerido y no puede estar vacio' });
+    if (!mensaje || typeof mensaje !== 'string' || !mensaje.trim()) {
+      return res.status(400).json({ error: 'mensaje requerido' });
     }
 
-    if (mensaje.trim().length > 1000) {
-      return res.status(400).json({ error: 'mensaje: maximo 1000 caracteres' });
+    if (mensaje.trim().length > 2000) {
+      return res.status(400).json({ error: 'mensaje: maximo 2000 caracteres' });
     }
 
-    // Session ID para mantener contexto de conversacion
-    const sessionId = session_id || `anon_${Date.now()}`;
+    const sessionId = session_id || `kevin_${Date.now()}`;
+    const mensajeLimpio = mensaje.trim();
+    const agentes = detectarAgentes(mensajeLimpio);
+    const systemPrompt = buildSystemPrompt(agentes);
 
-    // Agregar mensaje del usuario al historial
-    agregarAlHistorial(sessionId, 'user', mensaje.trim());
-
-    // Construir messages con historial para contexto
+    agregarAlHistorial(sessionId, 'user', mensajeLimpio);
     const historial = getHistorial(sessionId);
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...historial.slice(-MAX_HISTORIAL * 2) // ultimos N turnos
-    ];
 
-    // Llamar al LLM para clasificar la intencion
-    const response = await client.chat.completions.create({
-      model: MODEL,
-      temperature: 0.1, // bajo para clasificacion consistente
-      max_tokens: 500,
-      messages
+    const resultado = await llmChat({
+      system: systemPrompt,
+      messages: historial.slice(-MAX_HISTORIAL),
+      maxTokens: 1000,
+      temperature: 0.7
     });
 
-    const rawContent = response?.choices?.[0]?.message?.content || '';
+    const respuesta = resultado.content;
+    agregarAlHistorial(sessionId, 'assistant', respuesta);
 
-    // Limpiar y parsear JSON
-    const cleaned = rawContent
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
-
-    let clasificacion;
-    try {
-      clasificacion = JSON.parse(cleaned);
-    } catch {
-      // Si el LLM no devuelve JSON valido, respuesta de fallback
-      return res.json({
-        session_id: sessionId,
-        modulo: 'general',
-        accion: 'consulta_general',
-        respuesta: rawContent,
-        datos_adicionales: null
-      });
-    }
-
-    // Agregar respuesta del asistente al historial
-    agregarAlHistorial(sessionId, 'assistant', cleaned);
-
-    // Ejecutar accion si corresponde
-    const datosAdicionales = await ejecutarAccion(clasificacion, req);
-
-    // Respuesta final al cliente
     res.json({
       session_id: sessionId,
-      modulo: clasificacion.modulo,
-      accion: clasificacion.accion,
-      respuesta: clasificacion.respuesta_usuario,
-      requiere_datos_adicionales: clasificacion.requiere_datos_adicionales || false,
-      datos_faltantes: clasificacion.datos_faltantes || [],
-      datos_adicionales: datosAdicionales,
-      parametros_detectados: clasificacion.parametros || {}
+      agentes_activos: agentes,
+      modelo: resultado.modelo,
+      motor: resultado.motor,
+      respuesta,
+      turnos: Math.floor(historial.length / 2)
     });
 
   } catch (error) {
-    console.error('Chat error:', error);
+    console.error('Jarvis chat error:', error);
     res.status(500).json({
-      error: 'Error procesando mensaje',
+      error: 'Error en Jarvis OS',
       details: error?.message || 'Unknown error'
     });
   }
 });
 
 // ---------------------------------------------------------------------------
-// DELETE /api/v1/chat/sesion/:session_id
-// Limpiar historial de una sesion
+// GET /api/v1/chat/status
 // ---------------------------------------------------------------------------
-router.delete('/sesion/:session_id', (req, res) => {
-  const { session_id } = req.params;
-  if (conversaciones.has(session_id)) {
-    conversaciones.delete(session_id);
-    res.json({ message: `Sesion ${session_id} eliminada` });
-  } else {
-    res.status(404).json({ error: 'Sesion no encontrada' });
-  }
+router.get('/status', (req, res) => {
+  const { USE_ANTHROPIC, CLAUDE_MODEL } = require('../lib/llm');
+  res.json({
+    status: 'online',
+    motor: USE_ANTHROPIC ? 'anthropic' : 'openrouter',
+    modelo: USE_ANTHROPIC ? CLAUDE_MODEL : (process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini'),
+    claude_activo: USE_ANTHROPIC,
+    sesiones_activas: conversaciones.size,
+    agentes: Object.keys(AGENT_PATTERNS)
+  });
 });
 
 // ---------------------------------------------------------------------------
 // GET /api/v1/chat/sesion/:session_id
-// Ver historial de una sesion
+// DELETE /api/v1/chat/sesion/:session_id
 // ---------------------------------------------------------------------------
 router.get('/sesion/:session_id', (req, res) => {
-  const { session_id } = req.params;
-  const historial = conversaciones.get(session_id) || [];
+  const historial = conversaciones.get(req.params.session_id) || [];
   res.json({
-    session_id,
-    turnos: historial.length / 2,
+    session_id: req.params.session_id,
+    turnos: Math.floor(historial.length / 2),
     historial
   });
+});
+
+router.delete('/sesion/:session_id', (req, res) => {
+  conversaciones.delete(req.params.session_id);
+  res.json({ message: 'Sesion eliminada' });
 });
 
 module.exports = router;
