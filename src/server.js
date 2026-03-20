@@ -11,6 +11,8 @@ const limiter = rateLimit({
 });
 
 app.use(express.json());
+const validateContentType = require('./middleware/validate');
+app.use(validateContentType);
 app.use(limiter);
 
 app.get('/', (req, res) => {
@@ -25,6 +27,8 @@ const appointmentsRouter = require('./routes/appointments');
 app.use('/api/v1/citas', appointmentsRouter);
 const quotesRouter = require('./routes/quotes');
 app.use('/api/v1/presupuestos', quotesRouter);
+const ordersRouter = require('./routes/orders');
+app.use('/api/v1/pedidos', ordersRouter);
 const chatRouter = require('./routes/chat');
 app.use('/api/v1/chat', chatRouter);
 
