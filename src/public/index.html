@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="/theme.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JARVIS OS</title>
@@ -14,7 +15,7 @@
       --mono:'Courier New',Courier,monospace;
       --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     }
-    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5}
+    html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;transition:background .2s,color .2s}
     .app{display:grid;grid-template-rows:52px 1fr 36px;height:100vh;overflow:hidden}
     header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10}
     .header-left{display:flex;align-items:center;gap:14px}
@@ -127,6 +128,8 @@
     .search-box{width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;margin-bottom:12px;transition:border-color 0.2s}
     .search-box:focus{border-color:var(--purple-dim)}
     .search-box::placeholder{color:var(--text-dim)}
+    .theme-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:14px;padding:4px 10px;cursor:pointer;transition:border-color .2s}
+    .theme-btn:hover{border-color:var(--purple-dim)}
   </style>
 </head>
 <body>
@@ -139,6 +142,7 @@
     </div>
     <div class="header-right">
       <a href="/agenda.html" style="color:var(--purple);font-size:12px;font-family:var(--mono);text-decoration:none;padding:5px 12px;border:1px solid var(--purple-dim);border-radius:6px">Agenda</a>
+      <button class="theme-btn" id="theme-toggle" onclick="toggleTheme()">☀️</button>
       <div class="status-dot" id="header-dot"></div>
       <span class="status-label" id="header-status">conectando</span>
     </div>
@@ -183,6 +187,9 @@
           <div class="action-row">
             <button class="btn-action" id="btn-pacientes">
               <span class="btn-icon">&#x1F465;</span> Ver pacientes
+            </button>
+            <button class="btn-action" id="btn-nuevo-paciente">
+              <span class="btn-icon">➕</span> Nuevo Paciente
             </button>
             <button class="btn-action" id="btn-citas">
               <span class="btn-icon">&#x1F4C5;</span> Ver citas hoy
@@ -274,9 +281,126 @@
   </footer>
 </div>
 
+<div id="modal-paciente" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto">
+    <h2 style="color:var(--purple);font-size:16px;margin-bottom:20px">Nuevo Paciente</h2>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Nombre completo *</label>
+        <input id="np-nombre" type="text" placeholder="Ej: María González" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">RUT *</label>
+        <input id="np-rut" type="text" placeholder="12345678-9" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Teléfono</label>
+        <input id="np-telefono" type="text" placeholder="+56912345678" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Email</label>
+        <input id="np-email" type="email" placeholder="paciente@email.com" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Fecha nacimiento</label>
+        <input id="np-fecha" type="date" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Previsión</label>
+        <select id="np-prevision" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <option value="">Seleccionar...</option>
+          <option value="FONASA">FONASA</option>
+          <option value="ISAPRE">ISAPRE</option>
+          <option value="Particular">Particular</option>
+          <option value="CAPREDENA">CAPREDENA</option>
+          <option value="DIPRECA">DIPRECA</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Alergias</label>
+      <input id="np-alergias" type="text" placeholder="Ej: penicilina, aspirina (separadas por coma)" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Motivo de consulta</label>
+      <input id="np-motivo" type="text" placeholder="Ej: Dolor molar, blanqueamiento, ortodoncia..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Notas médicas</label>
+      <textarea id="np-notas" rows="2" placeholder="Hipertensión, diabetes, etc." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button onclick="cerrarModalPaciente()" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;cursor:pointer">Cancelar</button>
+      <button onclick="crearPaciente()" style="padding:8px 18px;border-radius:8px;border:none;background:#7F77DD;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Crear Paciente</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <script>
+function toast(msg,type,dur){
+  type=type||'info';dur=dur||3500;
+  var d=document.createElement('div');
+  d.className='toast '+type;d.textContent=msg;
+  document.getElementById('toast-container').appendChild(d);
+  setTimeout(function(){d.remove();},dur);
+}
+
+function cerrarModalPaciente(){
+  document.getElementById('modal-paciente').style.display='none';
+  ['np-nombre','np-rut','np-telefono','np-email','np-alergias','np-motivo','np-notas','np-fecha','np-prevision'].forEach(function(id){
+    var e=document.getElementById(id);
+    if(e)e.value='';
+  });
+}
+
+async function crearPaciente(){
+  var nombre=document.getElementById('np-nombre').value.trim();
+  var rut=document.getElementById('np-rut').value.trim();
+  var telefono=document.getElementById('np-telefono').value.trim();
+  var email=document.getElementById('np-email').value.trim();
+  var fecha=document.getElementById('np-fecha').value;
+  var prevision=document.getElementById('np-prevision').value;
+  var alergiasRaw=document.getElementById('np-alergias').value.trim();
+  var motivo=document.getElementById('np-motivo').value.trim();
+  var notas=document.getElementById('np-notas').value.trim();
+
+  if(!nombre){toast('El nombre es requerido','error');return;}
+  if(!rut){toast('El RUT es requerido','error');return;}
+
+  var alergias=alergiasRaw?alergiasRaw.split(',').map(function(a){return a.trim();}).filter(Boolean):[];
+
+  var body={
+    nombre:nombre,
+    rut:rut
+  };
+  if(telefono)body.telefono=telefono;
+  if(email)body.email=email;
+  if(fecha)body.fecha_nacimiento=fecha;
+  if(prevision)body.prevision=prevision;
+  if(alergias.length)body.alergias=alergias;
+  if(motivo)body.motivo_consulta=motivo;
+  if(notas)body.notas_medicas=notas;
+
+  try{
+    var res=await fetch('/api/v1/pacientes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    });
+    var data=await res.json();
+    if(!res.ok){toast(data.error||'Error al crear paciente','error');return;}
+    cerrarModalPaciente();
+    toast('Paciente creado: '+nombre,'success');
+    var clinicaResult=document.getElementById('clinica-result');
+    if(clinicaResult)clinicaResult.style.display='none';
+    if(window.cargarTodosPacientes)window.cargarTodosPacientes();
+  }catch(e){
+    toast('Error de conexion','error');
+  }
+}
+
 (function(){
 'use strict';
 var API='/api/v1';
@@ -284,14 +408,6 @@ var SESSION_ID='dashboard_kevin';
 var allPacientesCache=[];
 
 function el(id){return document.getElementById(id);}
-
-function toast(msg,type,dur){
-  type=type||'info'; dur=dur||3500;
-  var d=document.createElement('div');
-  d.className='toast '+type; d.textContent=msg;
-  el('toast-container').appendChild(d);
-  setTimeout(function(){d.remove();},dur);
-}
 
 function formatDate(iso){
   if(!iso)return'-';
@@ -485,12 +601,12 @@ var COLS_PEDIDOS=[
 function renderTable(theadId,tbodyId,rows,columns){
   var thead=el(theadId);
   var tbody=el(tbodyId);
-  thead.innerHTML=''; tbody.innerHTML='';
+  thead.innerHTML='';tbody.innerHTML='';
   if(!rows||rows.length===0){
     var tr=document.createElement('tr');
     var td=document.createElement('td');
-    td.colSpan=columns.length; td.className='empty-table'; td.textContent='Sin resultados';
-    tr.appendChild(td); tbody.appendChild(tr); return;
+    td.colSpan=columns.length;td.className='empty-table';td.textContent='Sin resultados';
+    tr.appendChild(td);tbody.appendChild(tr);return;
   }
   var trh=document.createElement('tr');
   columns.forEach(function(col){var th=document.createElement('th');th.textContent=col.label;trh.appendChild(th);});
@@ -522,8 +638,7 @@ function renderTable(theadId,tbodyId,rows,columns){
   });
 }
 
-/* BUSCADOR DE PACIENTES */
-async function cargarTodosPacientes(){
+window.cargarTodosPacientes=async function(){
   try{
     var res=await fetch(API+'/pacientes');
     var data=await res.json();
@@ -533,13 +648,12 @@ async function cargarTodosPacientes(){
 
 function buscarPacientes(term){
   if(!term||term.length<2){
-    if(term.length===0){el('clinica-result').style.display='none';}
+    if(term.length===0)el('clinica-result').style.display='none';
     return;
   }
-  var termLower=term.toLowerCase();
+  var tl=term.toLowerCase();
   var filtrados=allPacientesCache.filter(function(p){
-    return p.nombre.toLowerCase().includes(termLower)||
-           p.rut.toLowerCase().includes(termLower);
+    return p.nombre.toLowerCase().includes(tl)||p.rut.toLowerCase().includes(tl);
   });
   el('clinica-result-title').textContent='Busqueda: '+term;
   el('clinica-result-count').textContent=filtrados.length+' resultados';
@@ -548,7 +662,7 @@ function buscarPacientes(term){
 }
 
 el('btn-pacientes').addEventListener('click',async function(){
-  var btn=this; setLoading(btn,true);
+  var btn=this;setLoading(btn,true);
   try{
     var res=await fetch(API+'/pacientes');
     var data=await res.json();
@@ -558,13 +672,13 @@ el('btn-pacientes').addEventListener('click',async function(){
     el('clinica-result-count').textContent=allPacientesCache.length+' registros';
     renderTable('clinica-thead','clinica-tbody',allPacientesCache,COLS_PACIENTES);
     el('clinica-result').style.display='block';
-    toast('Pacientes cargados: '+allPacientesCache.length,'success');
+    toast('Pacientes: '+allPacientesCache.length,'success');
   }catch(err){toast('Error: '+err.message,'error');}
   finally{setLoading(btn,false);}
 });
 
 el('btn-citas').addEventListener('click',async function(){
-  var btn=this; setLoading(btn,true);
+  var btn=this;setLoading(btn,true);
   try{
     var hoy=todayISO();
     var res=await fetch(API+'/citas?fecha='+hoy);
@@ -581,7 +695,7 @@ el('btn-citas').addEventListener('click',async function(){
 });
 
 el('btn-pedidos').addEventListener('click',async function(){
-  var btn=this; setLoading(btn,true);
+  var btn=this;setLoading(btn,true);
   try{
     var res=await fetch(API+'/pedidos');
     var data=await res.json();
@@ -597,7 +711,7 @@ el('btn-pedidos').addEventListener('click',async function(){
 });
 
 el('btn-pedidos-activos').addEventListener('click',async function(){
-  var btn=this; setLoading(btn,true);
+  var btn=this;setLoading(btn,true);
   try{
     var res=await fetch(API+'/pedidos?estado=nuevo');
     var data=await res.json();
@@ -610,6 +724,14 @@ el('btn-pedidos-activos').addEventListener('click',async function(){
     toast('Pedidos activos: '+rows.length,'success');
   }catch(err){toast('Error: '+err.message,'error');}
   finally{setLoading(btn,false);}
+});
+
+el('btn-nuevo-paciente').addEventListener('click', function(){
+  document.getElementById('modal-paciente').style.display='flex';
+});
+
+document.getElementById('modal-paciente').addEventListener('click',function(e){
+  if(e.target===this)cerrarModalPaciente();
 });
 
 cargarTodosPacientes();
