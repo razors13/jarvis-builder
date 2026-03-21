@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="/theme.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historia Clínica — Jarvis OS</title>
@@ -346,6 +347,7 @@
       <div class="header-top">
         <button class="btn-back" onclick="goBack()">← Volver</button>
         <div class="header-actions">
+          <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:#e0e0e0;font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
           <button class="btn-secondary" onclick="verOdontograma()">🦷 Ver Odontograma</button>
           <button class="btn-primary" onclick="toggleForm()">+ Nueva Evolución</button>
         </div>

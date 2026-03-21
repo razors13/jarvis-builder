@@ -281,6 +281,7 @@
   </footer>
 </div>
 
+<!-- Modal Nuevo Paciente -->
 <div id="modal-paciente" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:460px;max-width:95vw;max-height:90vh;overflow-y:auto">
     <h2 style="color:var(--purple);font-size:16px;margin-bottom:20px">Nuevo Paciente</h2>
@@ -336,6 +337,20 @@
   </div>
 </div>
 
+<!-- Modal Post-Creación -->
+<div id="modal-paciente-creado" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center">
+    <div style="width:56px;height:56px;background:rgba(127,119,221,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:26px;border:1px solid var(--purple-dim)">✓</div>
+    <h3 style="color:var(--text);font-size:1.1rem;margin:0 0 6px;font-family:var(--mono)">Paciente registrado</h3>
+    <p id="modal-creado-nombre" style="color:var(--purple);font-weight:700;font-size:1.05rem;margin:0 0 6px;font-family:var(--mono)"></p>
+    <p style="color:var(--text-dim);font-size:0.82rem;margin:0 0 24px">¿Desea abrir su historia clínica ahora?</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button id="modal-creado-btn-historia" style="padding:10px 22px;border-radius:8px;border:none;background:var(--purple);color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--mono)">Abrir Historia</button>
+      <button onclick="cerrarModalPacienteCreado()" style="padding:10px 22px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;cursor:pointer;font-family:var(--mono)">Quedarse aquí</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <script>
@@ -355,6 +370,18 @@ function cerrarModalPaciente(){
   });
 }
 
+function cerrarModalPacienteCreado(){
+  document.getElementById('modal-paciente-creado').style.display='none';
+}
+
+function mostrarModalPacienteCreado(nombre,pacienteId){
+  document.getElementById('modal-creado-nombre').textContent=nombre;
+  document.getElementById('modal-creado-btn-historia').onclick=function(){
+    window.location.href='/historia.html?paciente_id='+pacienteId;
+  };
+  document.getElementById('modal-paciente-creado').style.display='flex';
+}
+
 async function crearPaciente(){
   var nombre=document.getElementById('np-nombre').value.trim();
   var rut=document.getElementById('np-rut').value.trim();
@@ -371,10 +398,7 @@ async function crearPaciente(){
 
   var alergias=alergiasRaw?alergiasRaw.split(',').map(function(a){return a.trim();}).filter(Boolean):[];
 
-  var body={
-    nombre:nombre,
-    rut:rut
-  };
+  var body={nombre:nombre,rut:rut};
   if(telefono)body.telefono=telefono;
   if(email)body.email=email;
   if(fecha)body.fecha_nacimiento=fecha;
@@ -391,11 +415,13 @@ async function crearPaciente(){
     });
     var data=await res.json();
     if(!res.ok){toast(data.error||'Error al crear paciente','error');return;}
+
+    // Extraer id — soporta {id, ...} o {paciente: {id, ...}}
+    var pacienteId=data.id||(data.paciente&&data.paciente.id);
     cerrarModalPaciente();
-    toast('Paciente creado: '+nombre,'success');
-    var clinicaResult=document.getElementById('clinica-result');
-    if(clinicaResult)clinicaResult.style.display='none';
     if(window.cargarTodosPacientes)window.cargarTodosPacientes();
+    mostrarModalPacienteCreado(nombre,pacienteId);
+
   }catch(e){
     toast('Error de conexion','error');
   }
@@ -726,7 +752,7 @@ el('btn-pedidos-activos').addEventListener('click',async function(){
   finally{setLoading(btn,false);}
 });
 
-el('btn-nuevo-paciente').addEventListener('click', function(){
+el('btn-nuevo-paciente').addEventListener('click',function(){
   document.getElementById('modal-paciente').style.display='flex';
 });
 
