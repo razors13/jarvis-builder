@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenda — Jarvis OS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh}
+.header{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;background:rgba(127,119,221,.08);border-bottom:1px solid rgba(127,119,221,.2)}
+.header h1{font-size:18px;color:#7F77DD;font-weight:600}
+.header-right{display:flex;gap:10px;align-items:center}
+.btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:#7F77DD;color:#fff}
+.btn-primary:hover{background:#6B63C5}
+.btn-ghost{background:rgba(255,255,255,.06);color:#e0e0e0;border:1px solid rgba(255,255,255,.12)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.nav-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid rgba(255,255,255,.06)}
+.week-label{font-size:15px;font-weight:500;color:#e0e0e0}
+.nav-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#aaa;font-size:13px;cursor:pointer}
+.nav-btn:hover{background:rgba(255,255,255,.06);color:#e0e0e0}
+.today-btn{padding:6px 14px;border-radius:6px;border:1px solid rgba(127,119,221,.4);background:rgba(127,119,221,.1);color:#7F77DD;font-size:13px;cursor:pointer}
+.today-btn:hover{background:rgba(127,119,221,.2)}
+.calendar{display:grid;grid-template-columns:60px repeat(6,1fr);border-left:1px solid rgba(255,255,255,.06)}
+.day-header{padding:10px 6px;text-align:center;border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02)}
+.day-header.today-col{background:rgba(127,119,221,.08);border-bottom:2px solid #7F77DD}
+.day-name{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:.05em}
+.day-num{font-size:20px;font-weight:600;color:#e0e0e0;margin-top:2px}
+.day-header.today-col .day-num{color:#7F77DD}
+.time-col{padding:0;border-right:1px solid rgba(255,255,255,.06)}
+.time-slot{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0 0;font-size:10px;color:#444;border-bottom:1px solid rgba(255,255,255,.04)}
+.day-col{position:relative;border-right:1px solid rgba(255,255,255,.06)}
+.day-col.today-col{background:rgba(127,119,221,.02)}
+.hour-cell{height:60px;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;transition:background .15s;position:relative}
+.hour-cell:hover{background:rgba(127,119,221,.08)}
+.hour-cell.half{border-bottom:1px dashed rgba(255,255,255,.03)}
+.cita-block{position:absolute;left:2px;right:2px;border-radius:6px;padding:4px 6px;font-size:11px;cursor:pointer;z-index:10;overflow:hidden;transition:opacity .15s}
+.cita-block:hover{opacity:.85;z-index:20}
+.cita-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cita-sub{font-size:10px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#1a1a2e;border:1px solid rgba(127,119,221,.3);border-radius:14px;padding:24px;width:420px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:16px;color:#7F77DD;margin-bottom:16px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:#888;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:9px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#e0e0e0;font-size:13px;font-family:inherit;outline:none;transition:border .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:rgba(127,119,221,.5)}
+.form-group select option{background:#1a1a2e;color:#e0e0e0}
+.form-group textarea{resize:vertical;min-height:70px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.detail-modal{background:#1a1a2e;border:1px solid rgba(127,119,221,.3);border-radius:14px;padding:24px;width:380px;max-width:95vw}
+.detail-field{margin-bottom:12px}
+.detail-label{font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.detail-val{font-size:13px;color:#e0e0e0}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-programada{background:rgba(127,119,221,.2);color:#7F77DD}
+.badge-confirmada{background:rgba(29,158,117,.2);color:#1D9E75}
+.badge-completada{background:rgba(29,158,117,.15);color:#1D9E75}
+.badge-cancelada{background:rgba(226,75,74,.15);color:#E24B4A}
+.badge-no_asistio{background:rgba(136,135,128,.15);color:#888}
+.msg{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transform:translateY(10px);transition:all .3s;z-index:200}
+.msg.show{opacity:1;transform:translateY(0)}
+.empty-day{display:flex;align-items:center;justify-content:center;height:100%;color:#333;font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Agenda Clinica</h1>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Dashboard</button>
+    <button class="btn btn-primary" onclick="openNewCita()">+ Nueva Cita</button>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="nav-btn" onclick="changeWeek(-1)">← Semana anterior</button>
+  <span class="week-label" id="week-label"></span>
+  <div style="display:flex;gap:8px">
+    <button class="today-btn" onclick="goToday()">Hoy</button>
+    <button class="nav-btn" onclick="changeWeek(1)">Semana siguiente →</button>
+  </div>
+</div>
+
+<div style="overflow-x:auto">
+  <div class="calendar" id="calendar" style="min-width:700px"></div>
+</div>
+
+<!-- Modal nueva cita -->
+<div class="modal-bg" id="new-modal">
+  <div class="modal">
+    <h2>Nueva Cita</h2>
+    <div class="form-group">
+      <label>Paciente</label>
+      <select id="f-paciente">
+        <option value="">Seleccionar paciente...</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="form-group">
+        <label>Hora</label>
+        <input type="time" id="f-hora" min="09:00" max="19:00" step="900">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tratamiento</label>
+      <select id="f-tratamiento">
+        <option value="consulta_general">Consulta general (30 min)</option>
+        <option value="limpieza">Limpieza dental (60 min)</option>
+        <option value="extraccion">Extraccion (45 min)</option>
+        <option value="endodoncia">Endodoncia (90 min)</option>
+        <option value="ortodoncia">Ortodoncia (60 min)</option>
+        <option value="implante">Implante (120 min)</option>
+        <option value="blanqueamiento">Blanqueamiento (90 min)</option>
+        <option value="radiografia">Radiografia (20 min)</option>
+        <option value="otro">Otro (30 min)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="f-notas" placeholder="Observaciones opcionales..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModals()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitCita()">Agendar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal detalle cita -->
+<div class="modal-bg" id="detail-modal">
+  <div class="detail-modal">
+    <h2 id="d-tratamiento" style="font-size:16px;color:#7F77DD;margin-bottom:16px"></h2>
+    <div class="detail-field"><div class="detail-label">Paciente</div><div class="detail-val" id="d-paciente"></div></div>
+    <div class="detail-field"><div class="detail-label">Fecha y hora</div><div class="detail-val" id="d-fecha"></div></div>
+    <div class="detail-field"><div class="detail-label">Duracion</div><div class="detail-val" id="d-duracion"></div></div>
+    <div class="detail-field"><div class="detail-label">Estado</div><div class="detail-val" id="d-estado"></div></div>
+    <div class="detail-field" id="d-notas-wrap"><div class="detail-label">Notas</div><div class="detail-val" id="d-notas"></div></div>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeModals()">Cerrar</button>
+      <button class="btn" id="d-confirm-btn" style="background:#1D9E75;color:#fff" onclick="cambiarEstado('confirmada')">Confirmar</button>
+      <button class="btn" style="background:#E24B4A;color:#fff" onclick="cambiarEstado('cancelada')">Cancelar cita</button>
+      <button class="btn btn-primary" onclick="irHistoria()">Ver Historia</button>
+    </div>
+  </div>
+</div>
+
+<div class="msg" id="msg"></div>
+
+<script>
+const HORAS_INICIO=9, HORAS_FIN=19;
+const TRATAMIENTO_LABELS={consulta_general:'Consulta',limpieza:'Limpieza',extraccion:'Extraccion',endodoncia:'Endodoncia',ortodoncia:'Ortodoncia',implante:'Implante',blanqueamiento:'Blanqueamiento',radiografia:'Radiografia',otro:'Otro'};
+const TRATAMIENTO_COLORS={consulta_general:'#534AB7',limpieza:'#1D9E75',extraccion:'#E24B4A',endodoncia:'#D4537E',ortodoncia:'#0F6E56',implante:'#7F77DD',blanqueamiento:'#EF9F27',radiografia:'#378ADD',otro:'#888780'};
+const DIAS=['Lun','Mar','Mie','Jue','Vie','Sab'];
+
+let currentMonday=getMonday(new Date());
+let allCitas=[];
+let allPacientes=[];
+let selectedCita=null;
+let clickDate=null;
+let clickHour=null;
+
+function getMonday(d){
+  const dt=new Date(d);
+  const day=dt.getDay();
+  const diff=dt.getDate()-day+(day===0?-6:1);
+  dt.setDate(diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+
+function fmt(d){return d.toLocaleDateString('es-CL',{day:'numeric',month:'short',year:'numeric'});}
+
+function fmtTime(iso){
+  const d=new Date(iso);
+  return d.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+}
+
+function isToday(d){
+  const t=new Date();
+  return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear();
+}
+
+function changeWeek(dir){currentMonday=addDays(currentMonday,dir*7);renderCalendar();}
+function goToday(){currentMonday=getMonday(new Date());renderCalendar();}
+
+async function loadPacientes(){
+  try{
+    const r=await fetch('/api/v1/pacientes');
+    const d=await r.json();
+    allPacientes=d.pacientes||[];
+    const sel=document.getElementById('f-paciente');
+    allPacientes.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.id; o.textContent=`${p.nombre} (${p.rut})`;
+      sel.appendChild(o);
+    });
+  }catch(e){console.error(e);}
+}
+
+async function loadCitas(){
+  try{
+    const lunes=currentMonday.toISOString().substring(0,10);
+    const sabado=addDays(currentMonday,5).toISOString().substring(0,10);
+    const r=await fetch('/api/v1/citas');
+    const d=await r.json();
+    allCitas=d.citas||[];
+    renderCalendar();
+  }catch(e){console.error(e);}
+}
+
+function getPacienteName(pid){
+  const p=allPacientes.find(x=>x.id==pid);
+  return p?p.nombre:'Paciente';
+}
+
+function renderCalendar(){
+  const saturday=addDays(currentMonday,5);
+  document.getElementById('week-label').textContent=
+    `${fmt(currentMonday)} — ${fmt(saturday)}`;
+
+  const cal=document.getElementById('calendar');
+  cal.innerHTML='';
+
+  // Header row
+  const emptyHead=document.createElement('div');
+  emptyHead.className='day-header time-col';
+  emptyHead.style.cssText='border-right:1px solid rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02)';
+  cal.appendChild(emptyHead);
+
+  for(let i=0;i<6;i++){
+    const day=addDays(currentMonday,i);
+    const div=document.createElement('div');
+    div.className='day-header'+(isToday(day)?' today-col':'');
+    div.innerHTML=`<div class="day-name">${DIAS[i]}</div><div class="day-num">${day.getDate()}</div>`;
+    cal.appendChild(div);
+  }
+
+  // Time slots
+  for(let h=HORAS_INICIO;h<HORAS_FIN;h++){
+    // Time label
+    const tl=document.createElement('div');
+    tl.className='time-col';
+    const ts=document.createElement('div');
+    ts.className='time-slot';
+    ts.textContent=`${String(h).padStart(2,'0')}:00`;
+    tl.appendChild(ts);
+    cal.appendChild(tl);
+
+    // Day columns
+    for(let i=0;i<6;i++){
+      const day=addDays(currentMonday,i);
+      const cell=document.createElement('div');
+      cell.className='day-col hour-cell'+(isToday(day)?' today-col':'');
+      cell.onclick=()=>openNewCitaAt(day,h);
+
+      // Citas en esta celda
+      const dayStr=day.toISOString().substring(0,10);
+      const citasAqui=allCitas.filter(c=>{
+        const ci=new Date(c.fecha_hora_inicio);
+        return ci.toISOString().substring(0,10)===dayStr &&
+               ci.getHours()===h;
+      });
+
+      citasAqui.forEach(cita=>{
+        const ci=new Date(cita.fecha_hora_inicio);
+        const cf=new Date(cita.fecha_hora_fin);
+        const durMin=(cf-ci)/60000;
+        const topPct=(ci.getMinutes()/60)*100;
+        const heightPct=(durMin/60)*100;
+
+        const block=document.createElement('div');
+        block.className='cita-block';
+        const color=TRATAMIENTO_COLORS[cita.tratamiento]||'#534AB7';
+        block.style.cssText=`top:${topPct}%;height:${Math.max(heightPct,8)}%;background:${color}22;border-left:3px solid ${color};color:${color}`;
+        block.innerHTML=`
+          <div class="cita-title">${TRATAMIENTO_LABELS[cita.tratamiento]||cita.tratamiento}</div>
+          <div class="cita-sub">${getPacienteName(cita.paciente_id)}</div>
+        `;
+        block.onclick=e=>{e.stopPropagation();openDetail(cita);};
+        cell.appendChild(block);
+      });
+
+      cal.appendChild(cell);
+    }
+  }
+}
+
+function openNewCita(){
+  clickDate=null; clickHour=null;
+  const today=new Date().toISOString().substring(0,10);
+  document.getElementById('f-fecha').value=today;
+  document.getElementById('f-hora').value='09:00';
+  document.getElementById('f-notas').value='';
+  document.getElementById('f-paciente').value='';
+  document.getElementById('new-modal').classList.add('open');
+}
+
+function openNewCitaAt(day,hour){
+  const dateStr=day.toISOString().substring(0,10);
+  document.getElementById('f-fecha').value=dateStr;
+  document.getElementById('f-hora').value=`${String(hour).padStart(2,'0')}:00`;
+  document.getElementById('f-notas').value='';
+  document.getElementById('f-paciente').value='';
+  document.getElementById('new-modal').classList.add('open');
+}
+
+async function submitCita(){
+  const pid=document.getElementById('f-paciente').value;
+  const fecha=document.getElementById('f-fecha').value;
+  const hora=document.getElementById('f-hora').value;
+  const tratamiento=document.getElementById('f-tratamiento').value;
+  const notas=document.getElementById('f-notas').value;
+
+  if(!pid){showMsg('Selecciona un paciente','error');return;}
+  if(!fecha||!hora){showMsg('Selecciona fecha y hora','error');return;}
+
+  const fecha_hora=`${fecha}T${hora}:00`;
+
+  try{
+    const r=await fetch('/api/v1/citas',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({paciente_id:parseInt(pid),fecha_hora,tratamiento,notas:notas||null})
+    });
+    const d=await r.json();
+    if(!r.ok){
+      if(r.status===409){showMsg(`Conflicto: ya hay una cita a esa hora`,'error');}
+      else{showMsg(d.error||'Error al agendar','error');}
+      return;
+    }
+    closeModals();
+    showMsg('Cita agendada correctamente');
+    await loadCitas();
+  }catch(e){showMsg('Error de conexion','error');}
+}
+
+function openDetail(cita){
+  selectedCita=cita;
+  document.getElementById('d-tratamiento').textContent=TRATAMIENTO_LABELS[cita.tratamiento]||cita.tratamiento;
+  document.getElementById('d-paciente').textContent=getPacienteName(cita.paciente_id);
+  document.getElementById('d-fecha').textContent=
+    `${new Date(cita.fecha_hora_inicio).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'})} — ${fmtTime(cita.fecha_hora_inicio)} a ${fmtTime(cita.fecha_hora_fin)}`;
+  document.getElementById('d-duracion').textContent=`${cita.duracion_minutos} minutos`;
+  document.getElementById('d-estado').innerHTML=`<span class="badge badge-${cita.estado}">${cita.estado}</span>`;
+  const notasWrap=document.getElementById('d-notas-wrap');
+  if(cita.notas){document.getElementById('d-notas').textContent=cita.notas;notasWrap.style.display='';}
+  else{notasWrap.style.display='none';}
+  const confirmBtn=document.getElementById('d-confirm-btn');
+  confirmBtn.style.display=cita.estado==='programada'?'':'none';
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+async function cambiarEstado(nuevoEstado){
+  if(!selectedCita)return;
+  try{
+    const r=await fetch(`/api/v1/citas/${selectedCita.id}`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({estado:nuevoEstado})
+    });
+    if(!r.ok)throw new Error();
+    closeModals();
+    showMsg(nuevoEstado==='confirmada'?'Cita confirmada':'Cita cancelada');
+    await loadCitas();
+  }catch(e){showMsg('Error al actualizar','error');}
+}
+
+function irHistoria(){
+  if(selectedCita)window.location.href=`/historia.html?paciente_id=${selectedCita.paciente_id}`;
+}
+
+function closeModals(){
+  document.querySelectorAll('.modal-bg').forEach(m=>m.classList.remove('open'));
+  selectedCita=null;
+}
+
+document.querySelectorAll('.modal-bg').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)closeModals();});
+});
+
+function showMsg(txt,type='success'){
+  const m=document.getElementById('msg');
+  m.textContent=txt;
+  m.style.background=type==='error'?'#E24B4A':'#1D9E75';
+  m.classList.add('show');
+  setTimeout(()=>m.classList.remove('show'),3000);
+}
+
+// Init
+loadPacientes();
+loadCitas();
+</script>
+</body>
+</html>
