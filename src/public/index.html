@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -134,7 +135,6 @@
 </head>
 <body>
 <div class="app">
-
   <header>
     <div class="header-left">
       <div class="logo"><span class="logo-dot"></span>JARVIS OS</div>
@@ -151,12 +151,12 @@
   <main>
     <section class="panel-chat">
       <div class="panel-title">
-        <span>&#x2B21; CHAT</span>
+        <span>⬡ CHAT</span>
         <span id="session-label" style="font-size:10px;color:var(--purple)">dashboard_kevin</span>
       </div>
       <div class="chat-messages" id="chat-messages">
         <div class="chat-empty" id="chat-empty">
-          <div class="chat-empty-icon">&#x2B21;</div>
+          <div class="chat-empty-icon">⬡</div>
           <p>JARVIS OS listo</p>
           <p style="font-size:11px;opacity:0.5">Escribe un mensaje para comenzar</p>
         </div>
@@ -176,24 +176,17 @@
 
     <section class="panel-right">
       <nav class="tabs-nav">
-        <button class="tab-btn active" data-tab="clinica">&#x1F9B7; Clinica</button>
-        <button class="tab-btn" data-tab="thinkof">&#x1F5A8; ThinkOf</button>
-        <button class="tab-btn" data-tab="sistema">&#x2699; Sistema</button>
+        <button class="tab-btn active" data-tab="clinica">🦷 Clinica</button>
+        <button class="tab-btn" data-tab="thinkof">🖨 ThinkOf</button>
+        <button class="tab-btn" data-tab="sistema">⚙ Sistema</button>
       </nav>
       <div class="tab-content">
-
         <div class="tab-pane active" id="tab-clinica">
           <input class="search-box" id="search-pacientes" placeholder="Buscar paciente por nombre o RUT..." oninput="buscarPacientes(this.value)">
           <div class="action-row">
-            <button class="btn-action" id="btn-pacientes">
-              <span class="btn-icon">&#x1F465;</span> Ver pacientes
-            </button>
-            <button class="btn-action" id="btn-nuevo-paciente">
-              <span class="btn-icon">➕</span> Nuevo Paciente
-            </button>
-            <button class="btn-action" id="btn-citas">
-              <span class="btn-icon">&#x1F4C5;</span> Ver citas hoy
-            </button>
+            <button class="btn-action" id="btn-pacientes"><span class="btn-icon">👥</span> Ver pacientes</button>
+            <button class="btn-action" id="btn-nuevo-paciente"><span class="btn-icon">➕</span> Nuevo Paciente</button>
+            <button class="btn-action" id="btn-citas"><span class="btn-icon">📅</span> Ver citas hoy</button>
           </div>
           <div class="result-container" id="clinica-result" style="display:none">
             <div class="result-header">
@@ -201,22 +194,15 @@
               <span class="result-count" id="clinica-result-count"></span>
             </div>
             <div class="result-table-wrap">
-              <table>
-                <thead id="clinica-thead"></thead>
-                <tbody id="clinica-tbody"></tbody>
-              </table>
+              <table><thead id="clinica-thead"></thead><tbody id="clinica-tbody"></tbody></table>
             </div>
           </div>
         </div>
 
         <div class="tab-pane" id="tab-thinkof">
           <div class="action-row">
-            <button class="btn-action" id="btn-pedidos">
-              <span class="btn-icon">&#x1F4E6;</span> Ver pedidos
-            </button>
-            <button class="btn-action" id="btn-pedidos-activos">
-              <span class="btn-icon">&#x1F525;</span> Pedidos activos
-            </button>
+            <button class="btn-action" id="btn-pedidos"><span class="btn-icon">📦</span> Ver pedidos</button>
+            <button class="btn-action" id="btn-pedidos-activos"><span class="btn-icon">🔥</span> Pedidos activos</button>
           </div>
           <div class="result-container" id="thinkof-result" style="display:none">
             <div class="result-header">
@@ -224,32 +210,17 @@
               <span class="result-count" id="thinkof-result-count"></span>
             </div>
             <div class="result-table-wrap">
-              <table>
-                <thead id="thinkof-thead"></thead>
-                <tbody id="thinkof-tbody"></tbody>
-              </table>
+              <table><thead id="thinkof-thead"></thead><tbody id="thinkof-tbody"></tbody></table>
             </div>
           </div>
         </div>
 
         <div class="tab-pane" id="tab-sistema">
           <div class="status-grid">
-            <div class="status-card">
-              <div class="status-card-label">Estado</div>
-              <div class="status-card-value" id="sys-status">—</div>
-            </div>
-            <div class="status-card">
-              <div class="status-card-label">Motor</div>
-              <div class="status-card-value purple" id="sys-motor">—</div>
-            </div>
-            <div class="status-card">
-              <div class="status-card-label">Modelo</div>
-              <div class="status-card-value purple" id="sys-modelo" style="font-size:13px">—</div>
-            </div>
-            <div class="status-card">
-              <div class="status-card-label">Sesiones activas</div>
-              <div class="status-card-value purple" id="sys-sesiones">—</div>
-            </div>
+            <div class="status-card"><div class="status-card-label">Estado</div><div class="status-card-value" id="sys-status">—</div></div>
+            <div class="status-card"><div class="status-card-label">Motor</div><div class="status-card-value purple" id="sys-motor">—</div></div>
+            <div class="status-card"><div class="status-card-label">Modelo</div><div class="status-card-value purple" id="sys-modelo" style="font-size:13px">—</div></div>
+            <div class="status-card"><div class="status-card-label">Sesiones activas</div><div class="status-card-value purple" id="sys-sesiones">—</div></div>
           </div>
           <div class="agents-list">
             <div class="agents-list-title">Agentes disponibles</div>
@@ -262,22 +233,17 @@
             <span>seg</span>
           </div>
         </div>
-
       </div>
     </section>
   </main>
 
   <footer>
     <div class="footer-left">
-      <span>JARVIS OS v2</span>
-      <span class="footer-sep">|</span>
-      <span id="footer-motor">—</span>
-      <span class="footer-sep">|</span>
+      <span>JARVIS OS v2</span><span class="footer-sep">|</span>
+      <span id="footer-motor">—</span><span class="footer-sep">|</span>
       <span id="footer-sesiones">0 sesiones</span>
     </div>
-    <div class="footer-right">
-      <span id="footer-time"></span>
-    </div>
+    <div class="footer-right"><span id="footer-time"></span></div>
   </footer>
 </div>
 
@@ -365,8 +331,7 @@ function toast(msg,type,dur){
 function cerrarModalPaciente(){
   document.getElementById('modal-paciente').style.display='none';
   ['np-nombre','np-rut','np-telefono','np-email','np-alergias','np-motivo','np-notas','np-fecha','np-prevision'].forEach(function(id){
-    var e=document.getElementById(id);
-    if(e)e.value='';
+    var e=document.getElementById(id);if(e)e.value='';
   });
 }
 
@@ -392,12 +357,9 @@ async function crearPaciente(){
   var alergiasRaw=document.getElementById('np-alergias').value.trim();
   var motivo=document.getElementById('np-motivo').value.trim();
   var notas=document.getElementById('np-notas').value.trim();
-
   if(!nombre){toast('El nombre es requerido','error');return;}
   if(!rut){toast('El RUT es requerido','error');return;}
-
   var alergias=alergiasRaw?alergiasRaw.split(',').map(function(a){return a.trim();}).filter(Boolean):[];
-
   var body={nombre:nombre,rut:rut};
   if(telefono)body.telefono=telefono;
   if(email)body.email=email;
@@ -406,69 +368,48 @@ async function crearPaciente(){
   if(alergias.length)body.alergias=alergias;
   if(motivo)body.motivo_consulta=motivo;
   if(notas)body.notas_medicas=notas;
-
   try{
-    var res=await fetch('/api/v1/pacientes',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    });
+    var res=await fetch('/api/v1/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var data=await res.json();
     if(!res.ok){toast(data.error||'Error al crear paciente','error');return;}
-
-    // Extraer id — soporta {id, ...} o {paciente: {id, ...}}
     var pacienteId=data.id||(data.paciente&&data.paciente.id);
     cerrarModalPaciente();
     if(window.cargarTodosPacientes)window.cargarTodosPacientes();
     mostrarModalPacienteCreado(nombre,pacienteId);
-
-  }catch(e){
-    toast('Error de conexion','error');
-  }
+  }catch(e){toast('Error de conexion','error');}
 }
+
+// ✅ GLOBAL — buscarPacientes accesible desde oninput
+window.buscarPacientes=function(term){
+  if(!term||term.length<2){
+    if(term.length===0)document.getElementById('clinica-result').style.display='none';
+    return;
+  }
+  var tl=term.toLowerCase();
+  var filtrados=(window._pacientesCache||[]).filter(function(p){
+    return (p.nombre||'').toLowerCase().includes(tl)||(p.rut||'').toLowerCase().includes(tl);
+  });
+  document.getElementById('clinica-result-title').textContent='Busqueda: '+term;
+  document.getElementById('clinica-result-count').textContent=filtrados.length+' resultados';
+  if(window._renderPacientes)window._renderPacientes(filtrados);
+  document.getElementById('clinica-result').style.display='block';
+};
 
 (function(){
 'use strict';
 var API='/api/v1';
 var SESSION_ID='dashboard_kevin';
-var allPacientesCache=[];
 
 function el(id){return document.getElementById(id);}
-
-function formatDate(iso){
-  if(!iso)return'-';
-  try{return new Date(iso).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}
-  catch(e){return iso;}
-}
-
-function formatCurrency(val){
-  if(val==null)return'-';
-  return '$'+Number(val).toLocaleString('es-CL');
-}
-
-function estadoBadge(estado){
-  if(!estado)return'-';
-  return '<span class="estado-badge estado-'+estado.toLowerCase()+'">'+estado+'</span>';
-}
-
-function setLoading(btn,loading){
-  btn.disabled=loading;
-  if(loading){btn.dataset.orig=btn.innerHTML;btn.innerHTML='<span class="spinner"></span>';}
-  else{btn.innerHTML=btn.dataset.orig||btn.innerHTML;}
-}
-
-function nowTime(){
-  return new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-
-function todayISO(){
-  var d=new Date();
-  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-}
+function formatDate(iso){if(!iso)return'-';try{return new Date(iso).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return iso;}}
+function formatCurrency(val){if(val==null)return'-';return '$'+Number(val).toLocaleString('es-CL');}
+function estadoBadge(estado){if(!estado)return'-';return '<span class="estado-badge estado-'+estado.toLowerCase()+'">'+estado+'</span>';}
+function setLoading(btn,loading){btn.disabled=loading;if(loading){btn.dataset.orig=btn.innerHTML;btn.innerHTML='<span class="spinner"></span>';}else{btn.innerHTML=btn.dataset.orig||btn.innerHTML;}}
+function nowTime(){return new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
 function updateClock(){el('footer-time').textContent=nowTime();}
-updateClock();
-setInterval(updateClock,1000);
+updateClock();setInterval(updateClock,1000);
 
 var tabBtns=document.querySelectorAll('.tab-btn');
 tabBtns.forEach(function(btn){
@@ -490,55 +431,31 @@ function scrollBottom(){chatMsgs.scrollTop=chatMsgs.scrollHeight;}
 
 function addMessage(role,text,agentes){
   if(chatEmpty)chatEmpty.style.display='none';
-  var msg=document.createElement('div');
-  msg.className='msg '+role;
-  var meta=document.createElement('div');
-  meta.className='msg-meta';
-  meta.textContent=role==='user'?'Tu':'JARVIS';
-  var bubble=document.createElement('div');
-  bubble.className='msg-bubble';
-  bubble.textContent=text;
-  msg.appendChild(meta);
-  msg.appendChild(bubble);
+  var msg=document.createElement('div');msg.className='msg '+role;
+  var meta=document.createElement('div');meta.className='msg-meta';meta.textContent=role==='user'?'Tu':'JARVIS';
+  var bubble=document.createElement('div');bubble.className='msg-bubble';bubble.textContent=text;
+  msg.appendChild(meta);msg.appendChild(bubble);
   if(role==='jarvis'&&agentes&&agentes.length>0){
-    var badges=document.createElement('div');
-    badges.className='agents-badges';
-    agentes.forEach(function(a){
-      var b=document.createElement('span');
-      b.className='agent-badge '+a;
-      b.textContent=a;
-      badges.appendChild(b);
-    });
+    var badges=document.createElement('div');badges.className='agents-badges';
+    agentes.forEach(function(a){var b=document.createElement('span');b.className='agent-badge '+a;b.textContent=a;badges.appendChild(b);});
     msg.appendChild(badges);
   }
-  chatMsgs.insertBefore(msg,typingInd);
-  scrollBottom();
+  chatMsgs.insertBefore(msg,typingInd);scrollBottom();
 }
 
-function setTyping(v){
-  typingInd.className='typing-indicator'+(v?' visible':'');
-  if(v)scrollBottom();
-}
+function setTyping(v){typingInd.className='typing-indicator'+(v?' visible':'');if(v)scrollBottom();}
 
 async function sendMessage(){
-  var text=chatInput.value.trim();
-  if(!text)return;
-  chatInput.value='';
-  chatInput.style.height='auto';
-  btnSend.disabled=true;
-  addMessage('user',text,null);
-  setTyping(true);
+  var text=chatInput.value.trim();if(!text)return;
+  chatInput.value='';chatInput.style.height='auto';btnSend.disabled=true;
+  addMessage('user',text,null);setTyping(true);
   try{
     var res=await fetch(API+'/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mensaje:text,session_id:SESSION_ID})});
-    var data=await res.json();
-    setTyping(false);
+    var data=await res.json();setTyping(false);
     if(!res.ok){addMessage('jarvis','Error: '+(data.error||'Sin respuesta'),[]);toast(data.error||'Error','error');}
     else{addMessage('jarvis',data.respuesta,data.agentes_activos);el('badge-modelo').textContent=data.modelo||'desconocido';}
-  }catch(err){
-    setTyping(false);
-    addMessage('jarvis','Error de conexion con el servidor.',[]);
-    toast('No se pudo conectar con JARVIS','error');
-  }finally{btnSend.disabled=false;chatInput.focus();}
+  }catch(err){setTyping(false);addMessage('jarvis','Error de conexion con el servidor.',[]);toast('No se pudo conectar con JARVIS','error');}
+  finally{btnSend.disabled=false;chatInput.focus();}
 }
 
 btnSend.addEventListener('click',sendMessage);
@@ -548,89 +465,51 @@ chatInput.addEventListener('input',function(){this.style.height='auto';this.styl
 async function fetchStatus(){
   el('sys-spinner').style.display='inline-block';
   try{
-    var res=await fetch(API+'/chat/status');
-    var data=await res.json();
+    var res=await fetch(API+'/chat/status');var data=await res.json();
     var statusEl=el('sys-status');
     if(statusEl){statusEl.textContent=data.status||'-';statusEl.className='status-card-value '+(data.status==='online'?'online':'');}
     if(el('sys-motor'))el('sys-motor').textContent=data.motor||'-';
     if(el('sys-modelo'))el('sys-modelo').textContent=data.modelo||'-';
     if(el('sys-sesiones'))el('sys-sesiones').textContent=String(data.sesiones_activas||0);
     var agentesEl=el('sys-agentes');
-    if(agentesEl){
-      agentesEl.innerHTML='';
-      if(data.agentes&&data.agentes.length){
-        data.agentes.forEach(function(a){
-          var b=document.createElement('span');
-          b.className='agent-badge '+a;
-          b.textContent=a;
-          agentesEl.appendChild(b);
-        });
-      }
-    }
+    if(agentesEl){agentesEl.innerHTML='';if(data.agentes&&data.agentes.length){data.agentes.forEach(function(a){var b=document.createElement('span');b.className='agent-badge '+a;b.textContent=a;agentesEl.appendChild(b);});}}
     if(el('badge-modelo'))el('badge-modelo').textContent=data.modelo||'-';
     if(el('footer-motor'))el('footer-motor').textContent=data.motor||'-';
     if(el('footer-sesiones'))el('footer-sesiones').textContent=(data.sesiones_activas||0)+' sesiones';
-    var dot=el('header-dot');
-    var lbl=el('header-status');
-    if(data.status==='online'){
-      if(dot)dot.className='status-dot online';
-      if(lbl)lbl.textContent='online';
-    }else{
-      if(dot)dot.className='status-dot offline';
-      if(lbl)lbl.textContent='offline';
-    }
+    var dot=el('header-dot');var lbl=el('header-status');
+    if(data.status==='online'){if(dot)dot.className='status-dot online';if(lbl)lbl.textContent='online';}
+    else{if(dot)dot.className='status-dot offline';if(lbl)lbl.textContent='offline';}
   }catch(err){
     if(el('header-dot'))el('header-dot').className='status-dot offline';
     if(el('header-status'))el('header-status').textContent='offline';
     if(el('badge-modelo'))el('badge-modelo').textContent='sin conexion';
-  }finally{
-    if(el('sys-spinner'))el('sys-spinner').style.display='none';
-  }
+  }finally{if(el('sys-spinner'))el('sys-spinner').style.display='none';}
 }
 
-var countdown=30;
-fetchStatus();
-setInterval(function(){
-  countdown--;
-  if(el('refresh-countdown'))el('refresh-countdown').textContent=countdown;
-  if(countdown<=0){countdown=30;fetchStatus();}
-},1000);
+var countdown=30;fetchStatus();
+setInterval(function(){countdown--;if(el('refresh-countdown'))el('refresh-countdown').textContent=countdown;if(countdown<=0){countdown=30;fetchStatus();}},1000);
 
 var COLS_PACIENTES=[
-  {key:'id',label:'ID'},
-  {key:'nombre',label:'Nombre'},
-  {key:'rut',label:'RUT'},
-  {key:'telefono',label:'Telefono'},
-  {key:'estado',label:'Estado',type:'estado'},
+  {key:'id',label:'ID'},{key:'nombre',label:'Nombre'},{key:'rut',label:'RUT'},
+  {key:'telefono',label:'Telefono'},{key:'estado',label:'Estado',type:'estado'},
   {key:'acciones',label:'Acciones',type:'actions'}
 ];
-
 var COLS_CITAS=[
-  {key:'id',label:'ID'},
-  {key:'paciente_id',label:'Paciente ID'},
-  {key:'tratamiento',label:'Tratamiento'},
-  {key:'fecha_hora_inicio',label:'Fecha',type:'date'},
-  {key:'duracion_minutos',label:'Min'},
+  {key:'id',label:'ID'},{key:'paciente_id',label:'Paciente ID'},{key:'tratamiento',label:'Tratamiento'},
+  {key:'fecha_hora_inicio',label:'Fecha',type:'date'},{key:'duracion_minutos',label:'Min'},
   {key:'estado',label:'Estado',type:'estado'}
 ];
-
 var COLS_PEDIDOS=[
-  {key:'id',label:'ID'},
-  {key:'empresa',label:'Empresa'},
-  {key:'producto',label:'Producto'},
-  {key:'cantidad',label:'Cant.'},
-  {key:'estado',label:'Estado',type:'estado'},
-  {key:'precio_estimado',label:'Precio Est.',type:'currency'},
-  {key:'created_at',label:'Fecha',type:'date'}
+  {key:'id',label:'ID'},{key:'empresa',label:'Empresa'},{key:'producto',label:'Producto'},
+  {key:'cantidad',label:'Cant.'},{key:'estado',label:'Estado',type:'estado'},
+  {key:'precio_estimado',label:'Precio Est.',type:'currency'},{key:'created_at',label:'Fecha',type:'date'}
 ];
 
 function renderTable(theadId,tbodyId,rows,columns){
-  var thead=el(theadId);
-  var tbody=el(tbodyId);
+  var thead=el(theadId);var tbody=el(tbodyId);
   thead.innerHTML='';tbody.innerHTML='';
   if(!rows||rows.length===0){
-    var tr=document.createElement('tr');
-    var td=document.createElement('td');
+    var tr=document.createElement('tr');var td=document.createElement('td');
     td.colSpan=columns.length;td.className='empty-table';td.textContent='Sin resultados';
     tr.appendChild(td);tbody.appendChild(tr);return;
   }
@@ -640,8 +519,7 @@ function renderTable(theadId,tbodyId,rows,columns){
   rows.forEach(function(row){
     var tr=document.createElement('tr');
     columns.forEach(function(col){
-      var td=document.createElement('td');
-      var val=row[col.key];
+      var td=document.createElement('td');var val=row[col.key];
       if(col.type==='date'){td.textContent=formatDate(val);}
       else if(col.type==='currency'){td.textContent=formatCurrency(val);}
       else if(col.type==='estado'){td.innerHTML=estadoBadge(val);}
@@ -649,7 +527,8 @@ function renderTable(theadId,tbodyId,rows,columns){
         var b1=document.createElement('button');
         b1.style.cssText='padding:3px 8px;border-radius:5px;border:1px solid #7F77DD;background:transparent;color:#7F77DD;font-size:11px;cursor:pointer';
         b1.textContent='Odontograma';
-        b1.onclick=function(){window.open('/odontograma.html?paciente_id='+row.id,'_blank');};
+        // ✅ FIX: misma pestaña, no _blank
+        b1.onclick=function(){window.location.href='/odontograma.html?paciente_id='+row.id;};
         td.appendChild(b1);
         var b2=document.createElement('button');
         b2.style.cssText='padding:3px 8px;border-radius:5px;border:1px solid #1D9E75;background:transparent;color:#1D9E75;font-size:11px;cursor:pointer;margin-left:4px';
@@ -664,41 +543,29 @@ function renderTable(theadId,tbodyId,rows,columns){
   });
 }
 
+// ✅ Puente para buscarPacientes global
+window._renderPacientes=function(rows){renderTable('clinica-thead','clinica-tbody',rows,COLS_PACIENTES);};
+
 window.cargarTodosPacientes=async function(){
   try{
     var res=await fetch(API+'/pacientes');
     var data=await res.json();
-    allPacientesCache=data.pacientes||[];
+    var cache=data.pacientes||[];
+    window._pacientesCache=cache;
   }catch(e){console.error(e);}
-}
-
-function buscarPacientes(term){
-  if(!term||term.length<2){
-    if(term.length===0)el('clinica-result').style.display='none';
-    return;
-  }
-  var tl=term.toLowerCase();
-  var filtrados=allPacientesCache.filter(function(p){
-    return p.nombre.toLowerCase().includes(tl)||p.rut.toLowerCase().includes(tl);
-  });
-  el('clinica-result-title').textContent='Busqueda: '+term;
-  el('clinica-result-count').textContent=filtrados.length+' resultados';
-  renderTable('clinica-thead','clinica-tbody',filtrados,COLS_PACIENTES);
-  el('clinica-result').style.display='block';
-}
+};
 
 el('btn-pacientes').addEventListener('click',async function(){
   var btn=this;setLoading(btn,true);
   try{
-    var res=await fetch(API+'/pacientes');
-    var data=await res.json();
+    var res=await fetch(API+'/pacientes');var data=await res.json();
     if(!res.ok)throw new Error(data.error||'Error');
-    allPacientesCache=data.pacientes||[];
+    window._pacientesCache=data.pacientes||[];
     el('clinica-result-title').textContent='Pacientes';
-    el('clinica-result-count').textContent=allPacientesCache.length+' registros';
-    renderTable('clinica-thead','clinica-tbody',allPacientesCache,COLS_PACIENTES);
+    el('clinica-result-count').textContent=window._pacientesCache.length+' registros';
+    renderTable('clinica-thead','clinica-tbody',window._pacientesCache,COLS_PACIENTES);
     el('clinica-result').style.display='block';
-    toast('Pacientes: '+allPacientesCache.length,'success');
+    toast('Pacientes: '+window._pacientesCache.length,'success');
   }catch(err){toast('Error: '+err.message,'error');}
   finally{setLoading(btn,false);}
 });
@@ -707,8 +574,7 @@ el('btn-citas').addEventListener('click',async function(){
   var btn=this;setLoading(btn,true);
   try{
     var hoy=todayISO();
-    var res=await fetch(API+'/citas?fecha='+hoy);
-    var data=await res.json();
+    var res=await fetch(API+'/citas?fecha='+hoy);var data=await res.json();
     if(!res.ok)throw new Error(data.error||'Error');
     var rows=data.citas||[];
     el('clinica-result-title').textContent='Citas hoy ('+hoy+')';
@@ -723,8 +589,7 @@ el('btn-citas').addEventListener('click',async function(){
 el('btn-pedidos').addEventListener('click',async function(){
   var btn=this;setLoading(btn,true);
   try{
-    var res=await fetch(API+'/pedidos');
-    var data=await res.json();
+    var res=await fetch(API+'/pedidos');var data=await res.json();
     if(!res.ok)throw new Error(data.error||'Error');
     var rows=data.pedidos||[];
     el('thinkof-result-title').textContent='Todos los pedidos';
@@ -739,8 +604,7 @@ el('btn-pedidos').addEventListener('click',async function(){
 el('btn-pedidos-activos').addEventListener('click',async function(){
   var btn=this;setLoading(btn,true);
   try{
-    var res=await fetch(API+'/pedidos?estado=nuevo');
-    var data=await res.json();
+    var res=await fetch(API+'/pedidos?estado=nuevo');var data=await res.json();
     if(!res.ok)throw new Error(data.error||'Error');
     var rows=data.pedidos||[];
     el('thinkof-result-title').textContent='Pedidos activos';
@@ -760,7 +624,7 @@ document.getElementById('modal-paciente').addEventListener('click',function(e){
   if(e.target===this)cerrarModalPaciente();
 });
 
-cargarTodosPacientes();
+window.cargarTodosPacientes();
 chatInput.focus();
 })();
 </script>
