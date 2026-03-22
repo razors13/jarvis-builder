@@ -419,14 +419,48 @@ window.buscarPacientes=function(term){
 (function(){
 'use strict';
 
+var userRole = '';
+var userName = '';
+
 // Verificar autenticacion al cargar
 (async function checkAuth(){
   if(!TOKEN){window.location.href='/login.html';return;}
   try{
     var r=await apiFetch(API+'/auth/verify');
-    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';}
+    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';return;}
+    var d=await r.json();
+    userRole = d.role || '';
+    userName = d.nombre || d.username || '';
+    
+    // Mostrar nombre en el header
+    var sessionLabel = document.getElementById('session-label');
+    if(sessionLabel) sessionLabel.textContent = userName;
+    
+    // Aplicar restricciones por rol
+    aplicarRol(userRole);
   }catch(e){window.location.href='/login.html';}
 })();
+
+function aplicarRol(role){
+  // Recepcionista no ve ThinkOf ni Sistema
+  if(role === 'recepcionista'){
+    var tabThinkof = document.querySelector('[data-tab="thinkof"]');
+    var tabSistema = document.querySelector('[data-tab="sistema"]');
+    if(tabThinkof) tabThinkof.style.display = 'none';
+    if(tabSistema) tabSistema.style.display = 'none';
+  }
+  
+  // Badge de rol en el header
+  var badge = document.getElementById('badge-modelo');
+  if(badge && role){
+    var colores = {
+      admin: 'rgba(127,119,221,0.2)',
+      doctor: 'rgba(74,222,128,0.15)',
+      recepcionista: 'rgba(251,191,36,0.15)'
+    };
+    badge.style.background = colores[role] || colores.admin;
+  }
+}
 
 function el(id){return document.getElementById(id);}
 function formatDate(iso){if(!iso)return'-';try{return new Date(iso).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return iso;}}
