@@ -10,20 +10,19 @@
     '--purple-glow':'rgba(127,119,221,0.08)'
   };
   function applyTheme(dark){
-    const vars=dark?DARK:LIGHT;
-    const r=document.documentElement;
-    for(const[k,v]of Object.entries(vars))r.style.setProperty(k,v);
-    document.querySelectorAll('#theme-toggle').forEach(btn=>{
-      btn.textContent=dark?'☀️':'🌙';
+    const vars = dark ? DARK : LIGHT;
+    const r = document.documentElement;
+    for(const [k,v] of Object.entries(vars)) r.style.setProperty(k,v);
+    document.querySelectorAll('#theme-toggle').forEach(btn => {
+      btn.textContent = dark ? '☀️' : '🌙';
     });
-    localStorage.setItem('jarvis-theme',dark?'dark':'light');
+    localStorage.setItem('jarvis-theme', dark ? 'dark' : 'light');
   }
-  const saved=localStorage.getItem('jarvis-theme');
-  applyTheme(saved!=='light');
-  window.toggleTheme=function(){
-    applyTheme(localStorage.getItem('jarvis-theme')==='light');
+  window.toggleTheme = function(){
+    const isDark = localStorage.getItem('jarvis-theme') !== 'light';
+    applyTheme(!isDark);
   };
-  document.addEventListener('DOMContentLoaded',function(){
-    applyTheme(localStorage.getItem('jarvis-theme')!=='light');
+  document.addEventListener('DOMContentLoaded', function(){
+    applyTheme(localStorage.getItem('jarvis-theme') !== 'light');
   });
 })();
