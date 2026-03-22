@@ -46,6 +46,9 @@ app.use('/api/v1/presupuestos', requireAuth, quotesRouter);
 const ordersRouter = require('./routes/orders');
 app.use('/api/v1/pedidos', requireAuth, ordersRouter);
 
+const derivacionesRouter = require('./routes/derivaciones');
+app.use('/api/v1/derivaciones', requireAuth, derivacionesRouter);
+
 const evolucionesRouter = require('./routes/evoluciones');
 app.use('/api/v1/evoluciones', requireAuth, evolucionesRouter);
 
