@@ -1,7 +1,3 @@
-// src/lib/llm.js
-// Abstraccion del LLM — Claude directo o OpenRouter
-// Cambiar de modelo = cambiar variable de entorno, nada mas
-
 const Anthropic = require('@anthropic-ai/sdk');
 const OpenAI = require('openai');
 
@@ -20,25 +16,26 @@ const openrouter = new OpenAI({
   }
 });
 
-const CLAUDE_MODEL = 'claude-sonnet-4-5';
+const CLAUDE_MODEL = 'claude-sonnet-4-5-20250514';
+const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
 
-async function chat({ system, messages, maxTokens = 1000, temperature = 0.7 }) {
+async function chat({ system, messages, maxTokens = 1000, temperature = 0.7, modelo = null }) {
   if (USE_ANTHROPIC) {
-    // Claude directo — SDK nativo
+    // Permite override de modelo — Haiku para acciones, Sonnet para chat
+    const modeloFinal = modelo || CLAUDE_MODEL;
     const response = await anthropic.messages.create({
-      model: CLAUDE_MODEL,
+      model: modeloFinal,
       max_tokens: maxTokens,
       system,
       messages
     });
     return {
       content: response.content[0].text,
-      modelo: CLAUDE_MODEL,
+      modelo: modeloFinal,
       motor: 'anthropic'
     };
   } else {
-    // OpenRouter fallback
     const response = await openrouter.chat.completions.create({
       model: OPENROUTER_MODEL,
       temperature,
@@ -56,4 +53,4 @@ async function chat({ system, messages, maxTokens = 1000, temperature = 0.7 }) {
   }
 }
 
-module.exports = { chat, USE_ANTHROPIC, CLAUDE_MODEL };
+module.exports = { chat, USE_ANTHROPIC, CLAUDE_MODEL, CLAUDE_HAIKU };
