@@ -49,6 +49,9 @@ app.use('/api/v1/pedidos', requireAuth, ordersRouter);
 const derivacionesRouter = require('./routes/derivaciones');
 app.use('/api/v1/derivaciones', requireAuth, derivacionesRouter);
 
+const adminRouter = require('./routes/admin');
+app.use('/api/v1/admin', requireAuth, adminRouter);
+
 const evolucionesRouter = require('./routes/evoluciones');
 app.use('/api/v1/evoluciones', requireAuth, evolucionesRouter);
 

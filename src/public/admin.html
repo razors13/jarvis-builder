@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script src="/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admin — Jarvis OS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;--bg4:#222222;--border:#2a2a2a;--purple:#7F77DD;--purple-dim:#4e4899;--purple-glow:rgba(127,119,221,0.15);--text:#e0e0e0;--text-dim:#888888;--green:#4ade80;--red:#f87171;--yellow:#fbbf24;--mono:'Courier New',Courier,monospace;--sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.header h1{font-size:20px;color:var(--purple);font-weight:700;letter-spacing:2px}
+.header-right{display:flex;gap:10px}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#9590e8}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-ghost:hover{background:var(--bg3)}
+.btn-danger{background:transparent;border:1px solid rgba(248,113,113,.3);color:var(--red)}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab-btn{flex:1;padding:14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text-dim);font-family:var(--mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--purple);border-bottom-color:var(--purple)}
+.container{padding:20px;max-width:1400px;margin:0 auto}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+.action-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;outline:none}
+.search-box:focus{border-color:var(--purple-dim)}
+table{width:100%;border-collapse:collapse;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+thead th{padding:10px 12px;text-align:left;color:var(--text-dim);font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);background:var(--bg3)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg3)}
+tbody td{padding:10px 12px;color:var(--text)}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-admin{background:rgba(127,119,221,0.2);color:var(--purple);border:1px solid var(--purple-dim)}
+.badge-doctor{background:rgba(74,222,128,0.15);color:var(--green);border:1px solid rgba(74,222,128,0.3)}
+.badge-recepcionista{background:rgba(251,191,36,0.15);color:var(--yellow);border:1px solid rgba(251,191,36,0.3)}
+.badge-activo{background:rgba(74,222,128,0.15);color:var(--green)}
+.badge-inactivo{background:rgba(248,113,113,0.15);color:var(--red)}
+.btn-small{padding:4px 10px;font-size:11px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text);transition:all .2s}
+.btn-small:hover{background:var(--bg4)}
+.btn-small.danger{border-color:rgba(248,113,113,.3);color:var(--red)}
+.btn-small.danger:hover{background:rgba(248,113,113,.1)}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center}
+.modal.open{display:flex}
+.modal-content{background:var(--bg2);border:1px solid var(--purple-dim);border-radius:14px;padding:24px;width:440px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;color:var(--purple);margin-bottom:16px;font-weight:600}
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.form-input,.form-select{width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.form-input:focus,.form-select:focus{border-color:var(--purple-dim)}
+.form-select option{background:var(--bg3)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px}
+.stat-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:700;color:var(--purple)}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;background:var(--purple);color:#fff;opacity:0;transform:translateY(10px);transition:all .3s;z-index:200}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:var(--red)}
+.toast.success{background:var(--green);color:#000}
+.empty{padding:40px;text-align:center;color:var(--text-dim);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚙ PANEL ADMIN</h1>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Dashboard</button>
+    <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-toggle">☀️</button>
+    <button class="btn btn-danger" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="usuarios">Usuarios</button>
+  <button class="tab-btn" data-tab="pacientes">Pacientes</button>
+  <button class="tab-btn" data-tab="actividad">Actividad</button>
+</div>
+
+<div class="container">
+  <!-- TAB USUARIOS -->
+  <div class="tab-pane active" id="tab-usuarios">
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="abrirModalNuevoUsuario()">+ Nuevo Usuario</button>
+    </div>
+    <table id="tabla-usuarios">
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-usuarios"></tbody>
+    </table>
+  </div>
+
+  <!-- TAB PACIENTES -->
+  <div class="tab-pane" id="tab-pacientes">
+    <div class="action-bar">
+      <input class="search-box" id="search-pacientes" placeholder="Buscar por nombre o RUT..." oninput="buscarPacientes(this.value)">
+    </div>
+    <table id="tabla-pacientes">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>RUT</th>
+          <th>Doctor Asignado</th>
+          <th>Previsión</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-pacientes"></tbody>
+    </table>
+  </div>
+
+  <!-- TAB ACTIVIDAD -->
+  <div class="tab-pane" id="tab-actividad">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Pacientes Activos</div>
+        <div class="stat-value" id="stat-pacientes">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Usuarios Activos</div>
+        <div class="stat-value" id="stat-usuarios">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Derivaciones Pendientes</div>
+        <div class="stat-value" id="stat-derivaciones">—</div>
+      </div>
+    </div>
+    <h3 style="font-size:14px;color:var(--purple);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px">Actividad por Doctor (Este Mes)</h3>
+    <table id="tabla-actividad">
+      <thead>
+        <tr>
+          <th>Doctor</th>
+          <th>Pacientes</th>
+          <th>Evoluciones Mes</th>
+          <th>Derivaciones Enviadas</th>
+          <th>Derivaciones Recibidas</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-actividad"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Nuevo Usuario -->
+<div class="modal" id="modal-nuevo-usuario">
+  <div class="modal-content">
+    <div class="modal-title">Nuevo Usuario</div>
+    <div class="form-group">
+      <label class="form-label">Nombre Completo *</label>
+      <input class="form-input" id="nu-nombre" placeholder="Ej: Dr. Juan Pérez">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Username *</label>
+      <input class="form-input" id="nu-username" placeholder="Ej: jperez">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="nu-email" placeholder="usuario@ejemplo.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rol *</label>
+      <select class="form-select" id="nu-role">
+        <option value="doctor">Doctor</option>
+        <option value="recepcionista">Recepcionista</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password *</label>
+      <input class="form-input" type="password" id="nu-password" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn btn-primary" onclick="crearUsuario()">Crear Usuario</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Usuario -->
+<div class="modal" id="modal-editar-usuario">
+  <div class="modal-content">
+    <div class="modal-title">Editar Usuario</div>
+    <input type="hidden" id="eu-id">
+    <div class="form-group">
+      <label class="form-label">Nombre Completo</label>
+      <input class="form-input" id="eu-nombre">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="eu-email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rol</label>
+      <select class="form-select" id="eu-role">
+        <option value="doctor">Doctor</option>
+        <option value="recepcionista">Recepcionista</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Resetear Password -->
+<div class="modal" id="modal-reset-password">
+  <div class="modal-content">
+    <div class="modal-title">Resetear Password</div>
+    <input type="hidden" id="rp-id">
+    <div class="form-group">
+      <label class="form-label">Nueva Password *</label>
+      <input class="form-input" type="password" id="rp-password" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarResetPassword()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reasignar Doctor -->
+<div class="modal" id="modal-reasignar">
+  <div class="modal-content">
+    <div class="modal-title">Reasignar Doctor</div>
+    <input type="hidden" id="ra-paciente-id">
+    <div class="form-group">
+      <label class="form-label">Nuevo Doctor</label>
+      <select class="form-select" id="ra-doctor">
+        <option value="">Seleccionar...</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="cerrarModales()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarReasignar()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API='/api/v1';
+var TOKEN=localStorage.getItem('jarvis_token')||'';
+
+function apiFetch(url,options){
+  options=options||{};
+  options.headers=options.headers||{};
+  options.headers['Authorization']='Bearer '+TOKEN;
+  return fetch(url,options);
+}
+
+function logout(){
+  localStorage.removeItem('jarvis_token');
+  localStorage.removeItem('jarvis_user');
+  window.location.href='/login.html';
+}
+
+function toast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast '+(type||'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function cerrarModales(){
+  document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));
+}
+
+// Verificar auth y rol admin
+(async function checkAuth(){
+  if(!TOKEN){window.location.href='/login.html';return;}
+  try{
+    const r=await apiFetch(API+'/auth/verify');
+    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';return;}
+    const d=await r.json();
+    if(d.role!=='admin'){
+      toast('Acceso denegado: solo administradores','error');
+      setTimeout(()=>window.location.href='index.html',2000);
+    }
+  }catch(e){window.location.href='/login.html';}
+})();
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    
+    if(btn.dataset.tab==='usuarios')cargarUsuarios();
+    else if(btn.dataset.tab==='pacientes')cargarPacientes();
+    else if(btn.dataset.tab==='actividad')cargarActividad();
+  });
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TAB USUARIOS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function cargarUsuarios(){
+  try{
+    const r=await apiFetch(API+'/admin/usuarios');
+    const d=await r.json();
+    const usuarios=d.usuarios||[];
+    const tbody=document.getElementById('tbody-usuarios');
+    tbody.innerHTML='';
+    
+    if(usuarios.length===0){
+      tbody.innerHTML='<tr><td colspan="6" class="empty">Sin usuarios</td></tr>';
+      return;
+    }
+    
+    usuarios.forEach(u=>{
+      const tr=document.createElement('tr');
+      const rolClass='badge-'+u.role;
+      const estadoClass=u.activo?'badge-activo':'badge-inactivo';
+      tr.innerHTML=`
+        <td>${u.nombre_completo||'—'}</td>
+        <td>${u.username}</td>
+        <td>${u.email||'—'}</td>
+        <td><span class="badge ${rolClass}">${u.role}</span></td>
+        <td><span class="badge ${estadoClass}">${u.activo?'Activo':'Inactivo'}</span></td>
+        <td>
+          <button class="btn-small" onclick="abrirModalEditarUsuario(${u.id})">Editar</button>
+          <button class="btn-small" onclick="abrirModalResetPassword(${u.id})">Reset Pass</button>
+          <button class="btn-small ${u.activo?'danger':''}" onclick="toggleUsuario(${u.id},${!u.activo})">${u.activo?'Desactivar':'Activar'}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }catch(e){toast('Error al cargar usuarios','error');}
+}
+
+function abrirModalNuevoUsuario(){
+  document.getElementById('nu-nombre').value='';
+  document.getElementById('nu-username').value='';
+  document.getElementById('nu-email').value='';
+  document.getElementById('nu-role').value='doctor';
+  document.getElementById('nu-password').value='';
+  document.getElementById('modal-nuevo-usuario').classList.add('open');
+}
+
+async function crearUsuario(){
+  const nombre=document.getElementById('nu-nombre').value.trim();
+  const username=document.getElementById('nu-username').value.trim();
+  const email=document.getElementById('nu-email').value.trim();
+  const role=document.getElementById('nu-role').value;
+  const password=document.getElementById('nu-password').value;
+  
+  if(!nombre||!username||!password){toast('Completa los campos requeridos','error');return;}
+  if(password.length<6){toast('Password debe tener al menos 6 caracteres','error');return;}
+  
+  try{
+    const r=await apiFetch(API+'/admin/usuarios',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre_completo:nombre,username,email:email||null,role,password})
+    });
+    const d=await r.json();
+    if(!r.ok){toast(d.error||'Error','error');return;}
+    toast('Usuario creado','success');
+    cerrarModales();
+    cargarUsuarios();
+  }catch(e){toast('Error de conexion','error');}
+}
+
+async function abrirModalEditarUsuario(id){
+  try{
+    const r=await apiFetch(API+'/admin/usuarios');
+    const d=await r.json();
+    const usuario=(d.usuarios||[]).find(u=>u.id===id);
+    if(!usuario){toast('Usuario no encontrado','error');return;}
+    
+    document.getElementById('eu-id').value=usuario.id;
+    document.getElementById('eu-nombre').value=usuario.nombre_completo||'';
+    document.getElementById('eu-email').value=usuario.email||'';
+    document.getElementById('eu-role').value=usuario.role;
+    document.getElementById('modal-editar-usuario').classList.add('open');
+  }catch(e){toast('Error','error');}
+}
+
+async function guardarUsuario(){
+  const id=document.getElementById('eu-id').value;
+  const nombre=document.getElementById('eu-nombre').value.trim();
+  const email=document.getElementById('eu-email').value.trim();
+  const role=document.getElementById('eu-role').value;
+  
+  try{
+    const r=await apiFetch(API+'/admin/usuarios/'+id,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre_completo:nombre,email:email||null,role})
+    });
+    const d=await r.json();
+    if(!r.ok){toast(d.error||'Error','error');return;}
+    toast('Usuario actualizado','success');
+    cerrarModales();
+    cargarUsuarios();
+  }catch(e){toast('Error de conexion','error');}
+}
+
+function abrirModalResetPassword(id){
+  document.getElementById('rp-id').value=id;
+  document.getElementById('rp-password').value='';
+  document.getElementById('modal-reset-password').classList.add('open');
+}
+
+async function confirmarResetPassword(){
+  const id=document.getElementById('rp-id').value;
+  const password=document.getElementById('rp-password').value;
+  
+  if(!password||password.length<6){toast('Password debe tener al menos 6 caracteres','error');return;}
+  
+  try{
+    const r=await apiFetch(API+'/admin/usuarios/'+id+'/reset-password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nueva_password:password})
+    });
+    const d=await r.json();
+    if(!r.ok){toast(d.error||'Error','error');return;}
+    toast('Password reseteada','success');
+    cerrarModales();
+  }catch(e){toast('Error de conexion','error');}
+}
+
+async function toggleUsuario(id, activar){
+  const msg = activar ? '¿Activar este usuario?' : '¿Desactivar este usuario?';
+  if(!confirm(msg)) return;
+  try{
+    let r;
+    if(activar){
+      r = await apiFetch(API+'/admin/usuarios/'+id+'/activar', {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'}
+      });
+    } else {
+      r = await apiFetch(API+'/admin/usuarios/'+id, { method:'DELETE' });
+    }
+    const d = await r.json();
+    if(!r.ok){ toast(d.error||'Error','error'); return; }
+    toast(activar ? 'Usuario activado' : 'Usuario desactivado', 'success');
+    cargarUsuarios();
+  }catch(e){ toast('Error de conexion','error'); }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TAB PACIENTES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var allPacientes=[];
+
+async function cargarPacientes(){
+  try{
+    const r=await apiFetch(API+'/admin/pacientes');
+    const d=await r.json();
+    allPacientes=d.pacientes||[];
+    renderPacientes(allPacientes);
+  }catch(e){toast('Error al cargar pacientes','error');}
+}
+
+function renderPacientes(pacientes){
+  const tbody=document.getElementById('tbody-pacientes');
+  tbody.innerHTML='';
+  
+  if(pacientes.length===0){
+    tbody.innerHTML='<tr><td colspan="6" class="empty">Sin pacientes</td></tr>';
+    return;
+  }
+  
+  pacientes.forEach(p=>{
+    const tr=document.createElement('tr');
+    const estadoClass=p.estado==='activo'?'badge-activo':'badge-inactivo';
+    tr.innerHTML=`
+      <td>${p.nombre}</td>
+      <td>${p.rut||'—'}</td>
+      <td>${p.doctor_nombre||'Sin asignar'}</td>
+      <td>${p.prevision||'—'}</td>
+      <td><span class="badge ${estadoClass}">${p.estado||'inactivo'}</span></td>
+      <td>
+        <button class="btn-small" onclick="window.location.href='/historia.html?paciente_id=${p.id}'">Ver Historia</button>
+        <button class="btn-small" onclick="abrirModalReasignar(${p.id})">Reasignar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function buscarPacientes(term){
+  if(!term||term.length<2){
+    renderPacientes(allPacientes);
+    return;
+  }
+  const tl=term.toLowerCase();
+  const filtrados=allPacientes.filter(p=>
+    (p.nombre||'').toLowerCase().includes(tl)||(p.rut||'').toLowerCase().includes(tl)
+  );
+  renderPacientes(filtrados);
+}
+
+async function abrirModalReasignar(pacienteId){
+  document.getElementById('ra-paciente-id').value=pacienteId;
+  const sel=document.getElementById('ra-doctor');
+  sel.innerHTML='<option value="">Seleccionar...</option>';
+  
+  try{
+    const r=await apiFetch(API+'/auth/doctores');
+    const d=await r.json();
+    (d.doctores||[]).forEach(doc=>{
+      const o=document.createElement('option');
+      o.value=doc.id;
+      o.textContent=doc.nombre_completo+' ('+doc.role+')';
+      sel.appendChild(o);
+    });
+  }catch(e){}
+  
+  document.getElementById('modal-reasignar').classList.add('open');
+}
+
+async function confirmarReasignar(){
+  const pacienteId=document.getElementById('ra-paciente-id').value;
+  const doctorId=document.getElementById('ra-doctor').value;
+  
+  if(!doctorId){toast('Selecciona un doctor','error');return;}
+  
+  try{
+    const r=await apiFetch(API+'/admin/pacientes/'+pacienteId+'/reasignar',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({doctor_id:parseInt(doctorId)})
+    });
+    const d=await r.json();
+    if(!r.ok){toast(d.error||'Error','error');return;}
+    toast('Doctor reasignado','success');
+    cerrarModales();
+    cargarPacientes();
+  }catch(e){toast('Error de conexion','error');}
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TAB ACTIVIDAD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function cargarActividad(){
+  try{
+    const r=await apiFetch(API+'/admin/actividad');
+    const d=await r.json();
+    
+    document.getElementById('stat-pacientes').textContent=d.total_pacientes||0;
+    document.getElementById('stat-usuarios').textContent=d.total_usuarios||0;
+    document.getElementById('stat-derivaciones').textContent=d.derivaciones_pendientes||0;
+    
+    const actividad=d.actividad_doctores||[];
+    const tbody=document.getElementById('tbody-actividad');
+    tbody.innerHTML='';
+    
+    if(actividad.length===0){
+      tbody.innerHTML='<tr><td colspan="5" class="empty">Sin actividad registrada</td></tr>';
+      return;
+    }
+    
+    actividad.forEach(a=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${a.doctor_nombre||'—'}</td>
+        <td>${a.total_pacientes||0}</td>
+        <td>${a.evoluciones_mes||0}</td>
+        <td>${a.derivaciones_enviadas||0}</td>
+        <td>${a.derivaciones_recibidas||0}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }catch(e){toast('Error al cargar actividad','error');}
+}
+
+// Cargar usuarios al inicio
+cargarUsuarios();
+</script>
+</body>
+</html>
