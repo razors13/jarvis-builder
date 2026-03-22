@@ -41,13 +41,12 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// GET /api/v1/auth/verify
 router.get('/verify', (req, res) => {
   const token = req.headers['authorization']?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ valid: false });
   try {
     const user = jwt.verify(token, SECRET);
-    res.json({ valid: true, username: user.username, role: user.role, nombre: user.nombre });
+    res.json({ valid: true, id: user.id, username: user.username, role: user.role, nombre: user.nombre });
   } catch {
     res.status(401).json({ valid: false });
   }
@@ -101,6 +100,34 @@ router.patch('/perfil', async (req, res) => {
 
   if (error) return res.status(500).json({ error: error.message });
   res.json({ message: 'Perfil actualizado', usuario: data });
+});
+
+// GET /api/v1/auth/doctores — lista doctores y admins activos
+router.get('/doctores', async (req, res) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token) return res.status(401).json({ error: 'No autorizado' });
+    
+    const jwt = require('jsonwebtoken');
+    const SECRET = process.env.JWT_SECRET || 'jarvis-secret-key';
+    let currentUser;
+    try { currentUser = jwt.verify(token, SECRET); }
+    catch { return res.status(401).json({ error: 'Token invalido' }); }
+    
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre_completo, role')
+      .in('role', ['doctor', 'admin'])
+      .eq('activo', true)
+      .neq('id', currentUser.id)
+      .order('nombre_completo');
+    
+    if (error) throw error;
+    res.json({ doctores: data });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 module.exports = router;

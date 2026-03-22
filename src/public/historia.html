@@ -120,6 +120,7 @@
         <div class="header-actions">
           <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:var(--text);font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
           <button class="btn-secondary" onclick="verOdontograma()">🦷 Ver Odontograma</button>
+          <button id="btn-derivar" onclick="abrirModalDerivar()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(56,189,248,.4);background:transparent;color:#38bdf8;font-size:13px;cursor:pointer">Derivar Paciente</button>
           <button class="btn-primary" onclick="toggleForm()">+ Nueva Evolución</button>
           <button onclick="logout()" style="background:transparent;border:1px solid rgba(248,113,113,.3);border-radius:6px;color:#f87171;font-size:12px;padding:5px 12px;cursor:pointer">Salir</button>
         </div>
@@ -175,6 +176,41 @@
   </div>
 
   <div class="message" id="message"></div>
+
+  <!-- Modal Derivación -->
+  <div id="modal-derivar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center">
+    <div style="background:var(--bg2,#1a1a1a);border:1px solid rgba(56,189,248,.3);border-radius:14px;padding:24px;width:440px;max-width:95vw">
+      <h2 style="font-size:16px;color:#38bdf8;margin-bottom:16px">Derivar Paciente</h2>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;text-transform:uppercase">Doctor destino</label>
+        <select id="drv-doctor" style="width:100%;padding:8px 12px;background:var(--bg3,#1a1a1a);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text,#e0e0e0);font-size:13px;outline:none">
+          <option value="">Seleccionar doctor...</option>
+        </select>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;text-transform:uppercase">Motivo de derivación *</label>
+        <input id="drv-motivo" type="text" placeholder="Ej: Endodoncia pieza 36, implante, ortodoncia..." style="width:100%;padding:8px 12px;background:var(--bg3,#1a1a1a);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text,#e0e0e0);font-size:13px;outline:none">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;text-transform:uppercase">Notas adicionales</label>
+        <textarea id="drv-notas" rows="3" placeholder="Observaciones clínicas relevantes..." style="width:100%;padding:8px 12px;background:var(--bg3,#1a1a1a);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--text,#e0e0e0);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
+      </div>
+      <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
+        <input type="checkbox" id="drv-acceso" checked style="width:16px;height:16px;cursor:pointer">
+        <label for="drv-acceso" style="font-size:12px;color:#aaa;cursor:pointer">
+          Compartir historia clínica completa con el doctor
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="cerrarModalDerivar()" style="padding:8px 18px;border-radius:8px;border:1px solid rgba(255,255,255,.12);background:transparent;color:#e0e0e0;font-size:13px;cursor:pointer">
+          Cancelar
+        </button>
+        <button onclick="enviarDerivacion()" style="padding:8px 18px;border-radius:8px;border:none;background:#38bdf8;color:#000;font-size:13px;font-weight:600;cursor:pointer">
+          Enviar Derivación
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     var TOKEN = localStorage.getItem('jarvis_token') || '';
@@ -344,6 +380,57 @@ document.getElementById('fin-promedio').textContent = '$' + promedio.toLocaleStr
         showMessage('✓ Marcado como pagado');
         loadEvoluciones();
       } catch (error) { console.error('Error:', error); showMessage(error.message, 'error'); }
+    }
+
+    async function abrirModalDerivar(){
+      // Cargar lista de doctores
+      var sel = document.getElementById('drv-doctor');
+      sel.innerHTML = '<option value="">Seleccionar doctor...</option>';
+      try{
+        var r = await apiFetch('/api/v1/auth/doctores');
+        var d = await r.json();
+        (d.doctores||[]).forEach(function(doc){
+          var o = document.createElement('option');
+          o.value = doc.id;
+          o.textContent = doc.nombre_completo + ' (' + doc.role + ')';
+          sel.appendChild(o);
+        });
+      }catch(e){ console.error(e); }
+      document.getElementById('modal-derivar').style.display='flex';
+    }
+
+    function cerrarModalDerivar(){
+      document.getElementById('modal-derivar').style.display='none';
+      document.getElementById('drv-motivo').value='';
+      document.getElementById('drv-notas').value='';
+    }
+
+    async function enviarDerivacion(){
+      var doctorId = document.getElementById('drv-doctor').value;
+      var motivo = document.getElementById('drv-motivo').value.trim();
+      var notas = document.getElementById('drv-notas').value.trim();
+      var acceso = document.getElementById('drv-acceso').checked;
+      
+      if(!doctorId){ alert('Selecciona un doctor'); return; }
+      if(!motivo){ alert('El motivo es requerido'); return; }
+      
+      try{
+        var r = await apiFetch('/api/v1/derivaciones',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            paciente_id: parseInt(pacienteId),
+            doctor_destino_id: parseInt(doctorId),
+            motivo: motivo,
+            notas: notas||null,
+            acceso_historia: acceso
+          })
+        });
+        var d = await r.json();
+        if(!r.ok){ alert(d.error||'Error al derivar'); return; }
+        cerrarModalDerivar();
+        showMessage('Derivación enviada exitosamente', 'success');
+      }catch(e){ alert('Error de conexion'); }
     }
 
     loadPatient();
