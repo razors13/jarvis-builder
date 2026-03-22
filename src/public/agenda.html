@@ -98,6 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Dashboard</button>
     <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-toggle" style="font-size:14px;padding:5px 10px">☀️</button>
     <button class="btn btn-primary" onclick="openNewCita()">+ Nueva Cita</button>
+    <button onclick="logout()" style="background:transparent;border:1px solid rgba(248,113,113,.3);border-radius:6px;color:#f87171;font-size:12px;padding:5px 12px;cursor:pointer">Salir</button>
   </div>
 </div>
 
@@ -184,6 +185,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="msg" id="msg"></div>
 
 <script>
+var TOKEN = localStorage.getItem('jarvis_token') || '';
+
+function apiFetch(url, options) {
+  options = options || {};
+  options.headers = options.headers || {};
+  options.headers['Authorization'] = 'Bearer ' + TOKEN;
+  return fetch(url, options);
+}
+
+function logout(){
+  localStorage.removeItem('jarvis_token');
+  localStorage.removeItem('jarvis_user');
+  window.location.href = '/login.html';
+}
+
+(async function checkAuth(){
+  if(!TOKEN){ window.location.href='/login.html'; return; }
+  try{
+    var r = await apiFetch('/api/v1/auth/verify');
+    if(!r.ok){ localStorage.removeItem('jarvis_token'); window.location.href='/login.html'; }
+  }catch(e){ window.location.href='/login.html'; }
+})();
+
 const TRAT_LABEL={consulta_general:'Consulta',limpieza:'Limpieza',extraccion:'Extraccion',endodoncia:'Endodoncia',ortodoncia:'Ortodoncia',implante:'Implante',blanqueamiento:'Blanqueamiento',radiografia:'Radiografia',otro:'Otro'};
 const TRAT_COLOR={consulta_general:'#534AB7',limpieza:'#1D9E75',extraccion:'#E24B4A',endodoncia:'#D4537E',ortodoncia:'#0F6E56',implante:'#7F77DD',blanqueamiento:'#EF9F27',radiografia:'#378ADD',otro:'#888780'};
 const DIAS_SHORT=['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
@@ -380,7 +404,7 @@ async function submitCita(){
   if(!pid){showMsg('Selecciona un paciente','error');return;}
   if(!fecha||!hora){showMsg('Selecciona fecha y hora','error');return;}
   try{
-    const r=await fetch('/api/v1/citas',{method:'POST',headers:{'Content-Type':'application/json'},
+    const r=await apiFetch('/api/v1/citas',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({paciente_id:parseInt(pid),fecha_hora:`${fecha}T${hora}:00`,tratamiento:trat,notas:notas||null})});
     const d=await r.json();
     if(!r.ok){showMsg(r.status===409?'Conflicto: ya hay una cita a esa hora':d.error||'Error','error');return;}
@@ -412,7 +436,7 @@ function openDetail(cita){
 async function cambiarEstado(estado){
   if(!selectedCita)return;
   try{
-    const r=await fetch(`/api/v1/citas/${selectedCita.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado})});
+    const r=await apiFetch(`/api/v1/citas/${selectedCita.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado})});
     if(!r.ok)throw new Error();
     closeModals();
     showMsg(estado==='confirmada'?'Cita confirmada':'Cita cancelada');
@@ -443,7 +467,7 @@ function showMsg(txt,type='success'){
 
 async function loadPacientes(){
   try{
-    const r=await fetch('/api/v1/pacientes');
+    const r=await apiFetch('/api/v1/pacientes');
     const d=await r.json();
     allPacientes=d.pacientes||[];
     const sel=document.getElementById('f-paciente');
@@ -457,7 +481,7 @@ async function loadPacientes(){
 
 async function loadCitas(){
   try{
-    const r=await fetch('/api/v1/citas');
+    const r=await apiFetch('/api/v1/citas');
     const d=await r.json();
     allCitas=d.citas||[];
   }catch(e){console.error(e);}

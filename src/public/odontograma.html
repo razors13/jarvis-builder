@@ -46,6 +46,7 @@ svg{overflow:visible;display:block}
     <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:#e0e0e0;font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
     <button class="btn-save" onclick="saveOdontograma()">Guardar</button>
     <button class="btn-back" onclick="goBack()">Volver</button>
+    <button onclick="logout()" style="background:transparent;border:1px solid rgba(248,113,113,.3);border-radius:6px;color:#f87171;font-size:12px;padding:5px 12px;cursor:pointer">Salir</button>
   </div>
 </div>
 
@@ -82,6 +83,29 @@ svg{overflow:visible;display:block}
 </div>
 
 <script>
+var TOKEN = localStorage.getItem('jarvis_token') || '';
+
+function apiFetch(url, options) {
+  options = options || {};
+  options.headers = options.headers || {};
+  options.headers['Authorization'] = 'Bearer ' + TOKEN;
+  return fetch(url, options);
+}
+
+function logout(){
+  localStorage.removeItem('jarvis_token');
+  localStorage.removeItem('jarvis_user');
+  window.location.href = '/login.html';
+}
+
+(async function checkAuth(){
+  if(!TOKEN){ window.location.href='/login.html'; return; }
+  try{
+    var r = await apiFetch('/api/v1/auth/verify');
+    if(!r.ok){ localStorage.removeItem('jarvis_token'); window.location.href='/login.html'; }
+  }catch(e){ window.location.href='/login.html'; }
+})();
+
 const UPPER=[18,17,16,15,14,13,12,11,21,22,23,24,25,26,27,28];
 const LOWER=[48,47,46,45,44,43,42,41,31,32,33,34,35,36,37,38];
 const ALL=UPPER.concat(LOWER);
@@ -269,7 +293,7 @@ function goBack(){window.history.back();}
 
 async function saveOdontograma(){
   try{
-    const r=await fetch(`/api/v1/pacientes/${patientId}/odontograma`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
+    const r=await apiFetch(`/api/v1/pacientes/${patientId}/odontograma`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
     if(!r.ok)throw new Error();
     showMessage('Odontograma guardado');
   }catch{showMessage('Error al guardar','error');}
@@ -306,7 +330,7 @@ async function loadPatientData(){
   patientId=params.get('paciente_id');
   if(!patientId){alert('No se especifico ID de paciente');window.location.href='index.html';return;}
   try{
-    const r=await fetch(`/api/v1/pacientes/${patientId}/odontograma`);
+    const r=await apiFetch(`/api/v1/pacientes/${patientId}/odontograma`);
     const data=await r.json();
     document.getElementById('patientName').textContent=data.nombre;
     if(data.odontograma&&Object.keys(data.odontograma).length){

@@ -121,6 +121,7 @@
           <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:var(--text);font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
           <button class="btn-secondary" onclick="verOdontograma()">🦷 Ver Odontograma</button>
           <button class="btn-primary" onclick="toggleForm()">+ Nueva Evolución</button>
+          <button onclick="logout()" style="background:transparent;border:1px solid rgba(248,113,113,.3);border-radius:6px;color:#f87171;font-size:12px;padding:5px 12px;cursor:pointer">Salir</button>
         </div>
       </div>
       <div class="patient-name" id="patientName">Cargando...</div>
@@ -176,6 +177,29 @@
   <div class="message" id="message"></div>
 
   <script>
+    var TOKEN = localStorage.getItem('jarvis_token') || '';
+    
+    function apiFetch(url, options) {
+      options = options || {};
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = 'Bearer ' + TOKEN;
+      return fetch(url, options);
+    }
+    
+    function logout(){
+      localStorage.removeItem('jarvis_token');
+      localStorage.removeItem('jarvis_user');
+      window.location.href = '/login.html';
+    }
+
+    (async function checkAuth(){
+      if(!TOKEN){ window.location.href='/login.html'; return; }
+      try{
+        var r = await apiFetch('/api/v1/auth/verify');
+        if(!r.ok){ localStorage.removeItem('jarvis_token'); window.location.href='/login.html'; }
+      }catch(e){ window.location.href='/login.html'; }
+    })();
+
     const API = '/api/v1';
     let pacienteId = null;
     let pacienteData = null;
@@ -199,7 +223,7 @@
 
     async function loadPatient() {
       try {
-        const response = await fetch(`${API}/pacientes/${pacienteId}`);
+        const response = await apiFetch(`${API}/pacientes/${pacienteId}`);
         if (!response.ok) throw new Error('Error al cargar paciente');
         const data = await response.json();
         pacienteData = data;
@@ -249,7 +273,7 @@ document.getElementById('fin-promedio').textContent = '$' + promedio.toLocaleStr
 
     async function loadEvoluciones() {
       try {
-        const response = await fetch(`${API}/evoluciones?paciente_id=${pacienteId}`);
+        const response = await apiFetch(`${API}/evoluciones?paciente_id=${pacienteId}`);
         if (!response.ok) throw new Error('Error al cargar evoluciones');
         const data = await response.json();
         const evoluciones = data.evoluciones || [];
@@ -304,7 +328,7 @@ document.getElementById('fin-promedio').textContent = '$' + promedio.toLocaleStr
         let dientesTratados = [];
         if (dientesTratadosStr) dientesTratados = dientesTratadosStr.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
         const body = { paciente_id: parseInt(pacienteId), tratamiento, dientes_tratados: dientesTratados, materiales: materiales||null, anestesia_tipo: anestesia||null, notas: notas||null, cobro: cobro ? parseFloat(cobro) : null };
-        const response = await fetch(`${API}/evoluciones`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        const response = await apiFetch(`${API}/evoluciones`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
         if (!response.ok) { const error = await response.json(); throw new Error(error.error||'Error al crear evolución'); }
         showMessage('✓ Evolución registrada exitosamente');
         document.getElementById('evolucionForm').reset();
@@ -315,7 +339,7 @@ document.getElementById('fin-promedio').textContent = '$' + promedio.toLocaleStr
 
     async function marcarPagado(id) {
       try {
-        const response = await fetch(`${API}/evoluciones/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({estado_pago:'pagado'}) });
+        const response = await apiFetch(`${API}/evoluciones/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({estado_pago:'pagado'}) });
         if (!response.ok) { const error = await response.json(); throw new Error(error.error||'Error al actualizar'); }
         showMessage('✓ Marcado como pagado');
         loadEvoluciones();
