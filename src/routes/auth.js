@@ -1,17 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const supabase = require('../lib/supabase');
 const router = express.Router();
 
 const SECRET = process.env.JWT_SECRET || 'jarvis-secret-key';
-
-const USERS = [
-  {
-    id: 1,
-    username: process.env.ADMIN_USER || 'kevin',
-    passwordHash: process.env.ADMIN_HASH
-  }
-];
 
 // POST /api/v1/auth/login
 router.post('/login', async (req, res) => {
@@ -19,21 +12,33 @@ router.post('/login', async (req, res) => {
   if (!username || !password)
     return res.status(400).json({ error: 'Usuario y password requeridos' });
 
-  const user = USERS.find(u => u.username === username);
-  if (!user)
-    return res.status(401).json({ error: 'Credenciales invalidas' });
+  try {
+    const { data: user, error } = await supabase
+      .from('usuarios')
+      .select('id, username, password_hash, nombre_completo, email, role, activo')
+      .eq('username', username)
+      .single();
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid)
-    return res.status(401).json({ error: 'Credenciales invalidas' });
+    if (error || !user)
+      return res.status(401).json({ error: 'Credenciales invalidas' });
 
-  const token = jwt.sign(
-    { id: user.id, username: user.username },
-    SECRET,
-    { expiresIn: '8h' }
-  );
+    if (!user.activo)
+      return res.status(401).json({ error: 'Usuario inactivo — contacta al administrador' });
 
-  res.json({ token, username: user.username });
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid)
+      return res.status(401).json({ error: 'Credenciales invalidas' });
+
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role, nombre: user.nombre_completo },
+      SECRET,
+      { expiresIn: '8h' }
+    );
+
+    res.json({ token, username: user.username, nombre: user.nombre_completo, role: user.role });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // GET /api/v1/auth/verify
@@ -42,10 +47,60 @@ router.get('/verify', (req, res) => {
   if (!token) return res.status(401).json({ valid: false });
   try {
     const user = jwt.verify(token, SECRET);
-    res.json({ valid: true, username: user.username });
+    res.json({ valid: true, username: user.username, role: user.role, nombre: user.nombre });
   } catch {
     res.status(401).json({ valid: false });
   }
+});
+
+// PATCH /api/v1/auth/perfil — actualizar nombre, email, password
+router.patch('/perfil', async (req, res) => {
+  const token = req.headers['authorization']?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'No autorizado' });
+
+  let userId;
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    userId = decoded.id;
+  } catch {
+    return res.status(401).json({ error: 'Token invalido' });
+  }
+
+  const { nombre_completo, email, password_actual, password_nueva } = req.body;
+  const updates = {};
+
+  if (nombre_completo) updates.nombre_completo = nombre_completo;
+  if (email) updates.email = email;
+
+  if (password_nueva) {
+    if (!password_actual)
+      return res.status(400).json({ error: 'Debes ingresar tu password actual' });
+
+    const { data: user } = await supabase
+      .from('usuarios')
+      .select('password_hash')
+      .eq('id', userId)
+      .single();
+
+    const valid = await bcrypt.compare(password_actual, user.password_hash);
+    if (!valid)
+      return res.status(401).json({ error: 'Password actual incorrecta' });
+
+    updates.password_hash = await bcrypt.hash(password_nueva, 10);
+  }
+
+  if (Object.keys(updates).length === 0)
+    return res.status(400).json({ error: 'Nada que actualizar' });
+
+  const { data, error } = await supabase
+    .from('usuarios')
+    .update(updates)
+    .eq('id', userId)
+    .select('id, username, nombre_completo, email, role')
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ message: 'Perfil actualizado', usuario: data });
 });
 
 module.exports = router;

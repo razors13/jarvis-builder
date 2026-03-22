@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script src="/theme.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Perfil — Jarvis OS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+:root{--bg:#0a0a0a;--bg2:#111111;--bg3:#1a1a1a;--bg4:#222222;--border:#2a2a2a;--purple:#7F77DD;--purple-dim:#4e4899;--purple-glow:rgba(127,119,221,0.15);--text:#e0e0e0;--text-dim:#888888;--green:#4ade80;--red:#f87171;--mono:'Courier New',Courier,monospace}
+.header{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.header h1{font-size:18px;color:var(--purple);font-weight:600;font-family:var(--mono)}
+.header-right{display:flex;gap:10px;align-items:center}
+.btn{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s}
+.btn-primary{background:var(--purple);color:#fff}
+.btn-primary:hover{background:#6B63C5}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{opacity:.8}
+.btn-danger{background:transparent;border:1px solid rgba(248,113,113,.3);color:#f87171}
+.container{max-width:560px;margin:40px auto;padding:0 20px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;margin-bottom:20px}
+.card-title{font-size:13px;font-weight:600;color:var(--purple);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.user-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono);margin-bottom:20px}
+.role-admin{background:rgba(127,119,221,.2);color:var(--purple);border:1px solid var(--purple-dim)}
+.role-doctor{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.role-recepcionista{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;transition:border .2s;font-family:inherit}
+.form-group input:focus{border-color:var(--purple-dim)}
+.form-group input:disabled{opacity:.5;cursor:not-allowed}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.msg-box{padding:10px 14px;border-radius:8px;font-size:13px;margin-top:16px;display:none}
+.msg-box.success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80}
+.msg-box.error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);color:#f87171}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⬡ Mi Perfil</h1>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="window.location.href='/index.html'">← Dashboard</button>
+    <button class="btn btn-danger" onclick="logout()">Salir</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-title">Información de cuenta</div>
+    <div id="role-badge" class="user-badge"></div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" id="p-username" disabled>
+    </div>
+    <div class="form-group">
+      <label>Nombre completo</label>
+      <input type="text" id="p-nombre" placeholder="Tu nombre completo">
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="p-email" placeholder="tu@email.cl">
+    </div>
+    <button class="btn btn-primary" onclick="guardarPerfil()" style="width:100%;margin-top:4px">Guardar cambios</button>
+    <div class="msg-box" id="msg-perfil"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cambiar contraseña</div>
+    <div class="form-group">
+      <label>Contraseña actual</label>
+      <input type="password" id="p-pass-actual" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Nueva contraseña</label>
+      <input type="password" id="p-pass-nueva" placeholder="••••••••">
+    </div>
+    <div class="form-group">
+      <label>Confirmar nueva contraseña</label>
+      <input type="password" id="p-pass-confirm" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" onclick="cambiarPassword()" style="width:100%;margin-top:4px">Cambiar contraseña</button>
+    <div class="msg-box" id="msg-password"></div>
+  </div>
+
+</div>
+
+<script>
+var TOKEN=localStorage.getItem('jarvis_token')||'';
+var API='/api/v1';
+
+function apiFetch(url,options){
+  options=options||{};
+  options.headers=options.headers||{};
+  options.headers['Authorization']='Bearer '+TOKEN;
+  return fetch(url,options);
+}
+
+function logout(){
+  localStorage.removeItem('jarvis_token');
+  localStorage.removeItem('jarvis_user');
+  window.location.href='/login.html';
+}
+
+function showMsg(id,text,type){
+  var el=document.getElementById(id);
+  el.textContent=text;
+  el.className='msg-box '+type;
+  el.style.display='block';
+  setTimeout(function(){el.style.display='none';},4000);
+}
+
+// Verificar auth y cargar perfil
+(async function init(){
+  if(!TOKEN){window.location.href='/login.html';return;}
+  try{
+    var r=await apiFetch(API+'/auth/verify');
+    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';return;}
+    var d=await r.json();
+    document.getElementById('p-username').value=d.username||'';
+    document.getElementById('p-nombre').value=d.nombre||'';
+    var badge=document.getElementById('role-badge');
+    badge.textContent=d.role||'';
+    badge.className='user-badge role-'+(d.role||'');
+    // cargar email desde perfil
+    loadEmail();
+  }catch(e){window.location.href='/login.html';}
+})();
+
+async function loadEmail(){
+  // el verify no devuelve email, lo cargamos aparte si lo necesitamos
+  // por ahora el usuario lo puede llenar manualmente
+}
+
+async function guardarPerfil(){
+  var nombre=document.getElementById('p-nombre').value.trim();
+  var email=document.getElementById('p-email').value.trim();
+  if(!nombre){showMsg('msg-perfil','El nombre es requerido','error');return;}
+  try{
+    var r=await apiFetch(API+'/auth/perfil',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre_completo:nombre,email:email||undefined})
+    });
+    var d=await r.json();
+    if(!r.ok){showMsg('msg-perfil',d.error||'Error al guardar','error');return;}
+    showMsg('msg-perfil','Perfil actualizado correctamente','success');
+  }catch(e){showMsg('msg-perfil','Error de conexion','error');}
+}
+
+async function cambiarPassword(){
+  var actual=document.getElementById('p-pass-actual').value;
+  var nueva=document.getElementById('p-pass-nueva').value;
+  var confirm=document.getElementById('p-pass-confirm').value;
+  if(!actual||!nueva||!confirm){showMsg('msg-password','Completa todos los campos','error');return;}
+  if(nueva!==confirm){showMsg('msg-password','Las contraseñas no coinciden','error');return;}
+  if(nueva.length<6){showMsg('msg-password','Minimo 6 caracteres','error');return;}
+  try{
+    var r=await apiFetch(API+'/auth/perfil',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password_actual:actual,password_nueva:nueva})
+    });
+    var d=await r.json();
+    if(!r.ok){showMsg('msg-password',d.error||'Error al cambiar password','error');return;}
+    showMsg('msg-password','Contraseña actualizada correctamente','success');
+    document.getElementById('p-pass-actual').value='';
+    document.getElementById('p-pass-nueva').value='';
+    document.getElementById('p-pass-confirm').value='';
+  }catch(e){showMsg('msg-password','Error de conexion','error');}
+}
+</script>
+</body>
+</html>
