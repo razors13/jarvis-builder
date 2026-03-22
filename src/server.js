@@ -40,8 +40,8 @@ app.use('/api/v1/pacientes', requireAuth, patientsRouter);
 const appointmentsRouter = require('./routes/appointments');
 app.use('/api/v1/citas', requireAuth, appointmentsRouter);
 
-const quotesRouter = require('./routes/quotes');
-app.use('/api/v1/presupuestos', requireAuth, quotesRouter);
+const presupuestosRouter = require('./routes/presupuestos');
+app.use('/api/v1/presupuestos', requireAuth, presupuestosRouter);
 
 const ordersRouter = require('./routes/orders');
 app.use('/api/v1/pedidos', requireAuth, ordersRouter);
