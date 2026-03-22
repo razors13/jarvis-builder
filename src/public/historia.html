@@ -685,7 +685,7 @@
         }
         recognition = new SpeechRecognition();
         recognition.lang = 'es-CL';
-        recognition.continuous = false;
+        recognition.continuous = true;
         recognition.interimResults = true;
         recognition.maxAlternatives = 1;
         var input = document.getElementById('jarvis-input');
@@ -698,15 +698,29 @@
           textoInterim = '';
         };
         recognition.onresult = function(event) {
-          var transcript = '';
-          for (var i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          input.value = transcript;
-          textoInterim = transcript;
-          input.style.height = 'auto';
-          input.style.height = Math.min(input.scrollHeight, 80) + 'px';
-        };
+  var transcript = '';
+  for (var i = event.resultIndex; i < event.results.length; i++) {
+    transcript += event.results[i][0].transcript;
+  }
+
+  var comandoFin = /\b(listo|fin|enviar|termina|terminado|lista evolucion|lista la evolucion)\s*$/i.test(transcript);
+
+  if (comandoFin) {
+    textoInterim = transcript
+      .replace(/\b(listo|fin|enviar|termina|terminado|lista evolucion|lista la evolucion)\s*$/i, '')
+      .trim();
+    input.value = textoInterim;
+    detenerVoz();
+    if (textoInterim.length > 2) {
+      setTimeout(function(){ enviarMensajeChat(textoInterim); }, 300);
+    }
+  } else {
+    textoInterim = transcript;
+    input.value = transcript;
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+  }
+};
         recognition.onerror = function(e) {
           console.error('Speech error:', e.error);
           detenerVoz();
@@ -715,13 +729,18 @@
           }
         };
         recognition.onend = function() {
-          detenerVoz();
-          if (textoInterim && textoInterim.trim().length > 2) {
-            setTimeout(function() {
-              enviarMensajeChat(textoInterim.trim());
-            }, 300);
-          }
-        };
+  // Con continuous=true solo detiene si el usuario hizo click en ⏹
+  if (escuchando) {
+    // Reiniciar automáticamente si se cortó solo
+    try { recognition.start(); } catch(e) {}
+  } else {
+    if (textoInterim && textoInterim.trim().length > 2) {
+      setTimeout(function() {
+        enviarMensajeChat(textoInterim.trim());
+      }, 300);
+    }
+  }
+};
         recognition.start();
       }
 
