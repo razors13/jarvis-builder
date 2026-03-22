@@ -265,7 +265,7 @@ function showMessage(txt,type='success'){
   setTimeout(()=>m.classList.remove('show'),3000);
 }
 
-function goBack(){window.location.href='index.html';}
+function goBack(){window.history.back();}
 
 async function saveOdontograma(){
   try{
