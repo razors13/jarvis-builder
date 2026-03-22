@@ -16,7 +16,7 @@ const openrouter = new OpenAI({
   }
 });
 
-const CLAUDE_MODEL = 'claude-sonnet-4-5-20250514';
+const CLAUDE_MODEL = 'claude-sonnet-4-5';
 const CLAUDE_HAIKU = 'claude-haiku-4-5-20251001';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-4o-mini';
 

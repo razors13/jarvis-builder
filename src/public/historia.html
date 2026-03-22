@@ -110,6 +110,59 @@
     .fin-table th { color: #555; }
     .fin-table td { color: #000; }
   }
+  /* ── JARVIS CHAT FLOTANTE ── */
+  @keyframes jarvis-pulse {
+    0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}
+    50%{box-shadow:0 0 0 8px rgba(248,113,113,0)}
+  }
+  .jarvis-mic-active {
+    background:rgba(248,113,113,.3) !important;
+    color:#f87171 !important;
+    animation:jarvis-pulse 1s infinite !important;
+  }
+  .jarvis-msg-user {
+    align-self:flex-end;
+    background:#4e4899;
+    color:#fff;
+    padding:8px 12px;
+    border-radius:12px 12px 3px 12px;
+    font-size:12px;
+    font-family:'Courier New',monospace;
+    max-width:85%;
+    line-height:1.5;
+    word-break:break-word;
+  }
+  .jarvis-msg-jarvis {
+    align-self:flex-start;
+    background:#1a1a1a;
+    color:#e0e0e0;
+    padding:8px 12px;
+    border-radius:12px 12px 12px 3px;
+    font-size:12px;
+    font-family:'Courier New',monospace;
+    max-width:85%;
+    line-height:1.5;
+    word-break:break-word;
+    border:1px solid #2a2a2a;
+  }
+  .jarvis-msg-jarvis.accion-ok {
+    border-color:rgba(74,222,128,.4);
+    background:#0d1a0d;
+  }
+  .jarvis-typing {
+    display:flex;gap:4px;align-items:center;
+    padding:10px 12px;
+  }
+  .jarvis-typing span {
+    width:6px;height:6px;border-radius:50%;
+    background:#7F77DD;animation:jarvis-dot 1.2s infinite;
+  }
+  .jarvis-typing span:nth-child(2){animation-delay:.2s}
+  .jarvis-typing span:nth-child(3){animation-delay:.4s}
+  @keyframes jarvis-dot {
+    0%,60%,100%{transform:translateY(0);opacity:.4}
+    30%{transform:translateY(-5px);opacity:1}
+  }
   </style>
 </head>
 <body>
@@ -177,6 +230,7 @@
 
   <div class="message" id="message"></div>
 
+  <!-- Modal Derivación -->
   <div id="modal-derivar" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center">
     <div style="background:var(--bg2,#1a1a1a);border:1px solid rgba(56,189,248,.3);border-radius:14px;padding:24px;width:440px;max-width:95vw">
       <h2 style="font-size:16px;color:#38bdf8;margin-bottom:16px">Derivar Paciente</h2>
@@ -204,6 +258,90 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- JARVIS CHAT FLOTANTE CON VOZ                           -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <!-- Botón flotante -->
+  <button id="jarvis-fab" onclick="toggleChat()" style="
+    position:fixed;bottom:24px;right:24px;z-index:500;
+    background:#7F77DD;color:#fff;border:none;
+    border-radius:50px;padding:12px 20px;
+    font-size:14px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 20px rgba(127,119,221,0.5);
+    display:flex;align-items:center;gap:8px;
+    transition:all .2s;letter-spacing:1px">
+    ⬡ JARVIS
+  </button>
+
+  <!-- Panel de chat -->
+  <div id="jarvis-panel" style="
+    display:none;position:fixed;bottom:80px;right:24px;
+    width:360px;height:480px;z-index:500;
+    background:#1a1a2e;border:1px solid rgba(127,119,221,.3);
+    border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.6);
+    flex-direction:column;overflow:hidden">
+
+    <!-- Header -->
+    <div style="
+      padding:12px 16px;background:rgba(127,119,221,.15);
+      border-bottom:1px solid rgba(127,119,221,.2);
+      display:flex;justify-content:space-between;align-items:center">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="color:#7F77DD;font-size:16px">⬡</span>
+        <span style="color:#e0e0e0;font-size:13px;font-weight:700;letter-spacing:1px">JARVIS</span>
+        <span style="width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 6px #4ade80;display:inline-block"></span>
+      </div>
+      <button onclick="toggleChat()" style="
+        background:transparent;border:none;color:#888;
+        font-size:18px;cursor:pointer;line-height:1">×</button>
+    </div>
+
+    <!-- Mensajes -->
+    <div id="jarvis-messages" style="
+      flex:1;overflow-y:auto;padding:12px;
+      display:flex;flex-direction:column;gap:10px;
+      scroll-behavior:smooth">
+      <div id="jarvis-welcome" style="
+        text-align:center;padding:20px 10px;
+        color:#555;font-size:12px;font-family:'Courier New',monospace">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.4">⬡</div>
+        Listo para registrar
+      </div>
+    </div>
+
+    <!-- Input área -->
+    <div style="
+      padding:10px 12px;border-top:1px solid rgba(127,119,221,.2);
+      background:rgba(0,0,0,.3);display:flex;gap:8px;align-items:flex-end">
+      <textarea id="jarvis-input" placeholder="Dictá o escribí..." rows="1" style="
+        flex:1;background:#0d0d1a;border:1px solid rgba(127,119,221,.2);
+        border-radius:8px;padding:8px 10px;color:#e0e0e0;
+        font-size:12px;font-family:'Courier New',monospace;
+        resize:none;outline:none;min-height:36px;max-height:80px;
+        line-height:1.4;transition:border-color .2s"></textarea>
+      <button id="jarvis-mic" onclick="toggleVoz()" style="
+        width:36px;height:36px;border-radius:50%;border:none;
+        background:rgba(127,119,221,.2);color:#7F77DD;
+        font-size:16px;cursor:pointer;flex-shrink:0;
+        transition:all .2s;display:flex;align-items:center;justify-content:center">
+        🎤
+      </button>
+      <button onclick="enviarMensajeChat()" style="
+        width:36px;height:36px;border-radius:50%;border:none;
+        background:#7F77DD;color:#fff;font-size:14px;
+        cursor:pointer;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center">
+        ➤
+      </button>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar al click fuera -->
+  <div id="jarvis-overlay" onclick="toggleChat()" style="
+    display:none;position:fixed;inset:0;z-index:499;
+    background:transparent"></div>
 
   <script>
     var TOKEN = localStorage.getItem('jarvis_token') || '';
@@ -261,7 +399,6 @@
         var data = await response.json();
         pacienteData = data;
 
-        // Detectar si es doctor derivado
         var tokenData = JSON.parse(atob(TOKEN.split('.')[1]));
         var userId = tokenData.id;
         var userRole = tokenData.role;
@@ -439,6 +576,179 @@
         showMessage('Derivación enviada exitosamente', 'success');
       }catch(e){ alert('Error de conexion'); }
     }
+
+    // ── JARVIS CHAT FLOTANTE ─────────────────────────────────
+    (function(){
+      var chatPacienteId = new URLSearchParams(window.location.search).get('paciente_id');
+      var chatSessionId = 'historia_' + chatPacienteId + '_' + Date.now();
+      var chatAbierto = false;
+      var escuchando = false;
+      var recognition = null;
+      var textoInterim = '';
+
+      window.toggleChat = function() {
+        chatAbierto = !chatAbierto;
+        var panel = document.getElementById('jarvis-panel');
+        var overlay = document.getElementById('jarvis-overlay');
+        var fab = document.getElementById('jarvis-fab');
+        if (chatAbierto) {
+          panel.style.display = 'flex';
+          overlay.style.display = 'block';
+          fab.style.background = '#4e4899';
+          document.getElementById('jarvis-input').focus();
+        } else {
+          panel.style.display = 'none';
+          overlay.style.display = 'none';
+          fab.style.background = '#7F77DD';
+          if (escuchando) detenerVoz();
+        }
+      };
+
+      function agregarMensaje(texto, tipo, accionOk) {
+        var welcome = document.getElementById('jarvis-welcome');
+        if (welcome) welcome.style.display = 'none';
+        var msgs = document.getElementById('jarvis-messages');
+        var div = document.createElement('div');
+        div.className = tipo === 'user' ? 'jarvis-msg-user' : 'jarvis-msg-jarvis';
+        if (accionOk) div.classList.add('accion-ok');
+        var html = texto
+          .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+          .replace(/\n/g,'<br>');
+        div.innerHTML = html;
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+        return div;
+      }
+
+      function mostrarTyping() {
+        var msgs = document.getElementById('jarvis-messages');
+        var div = document.createElement('div');
+        div.className = 'jarvis-msg-jarvis jarvis-typing';
+        div.id = 'jarvis-typing';
+        div.innerHTML = '<span></span><span></span><span></span>';
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function quitarTyping() {
+        var t = document.getElementById('jarvis-typing');
+        if (t) t.remove();
+      }
+
+      window.enviarMensajeChat = async function(textoParam) {
+        var input = document.getElementById('jarvis-input');
+        var texto = textoParam || input.value.trim();
+        if (!texto) return;
+        input.value = '';
+        input.style.height = 'auto';
+        agregarMensaje(texto, 'user', false);
+        mostrarTyping();
+        try {
+          var r = await apiFetch('/api/v1/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mensaje: texto,
+              session_id: chatSessionId,
+              paciente_id: parseInt(chatPacienteId)
+            })
+          });
+          var d = await r.json();
+          quitarTyping();
+          if (!r.ok) {
+            agregarMensaje('Error: ' + (d.error||'sin respuesta'), 'jarvis', false);
+            return;
+          }
+          agregarMensaje(d.respuesta, 'jarvis', d.accion_ejecutada);
+          if (d.accion_ejecutada) {
+            setTimeout(function() {
+              if (typeof loadEvoluciones === 'function') loadEvoluciones();
+              if (typeof loadPatient === 'function') loadPatient();
+            }, 800);
+          }
+        } catch(e) {
+          quitarTyping();
+          agregarMensaje('Error de conexión con Jarvis.', 'jarvis', false);
+        }
+      };
+
+      window.toggleVoz = function() {
+        if (escuchando) { detenerVoz(); } else { iniciarVoz(); }
+      };
+
+      function iniciarVoz() {
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+          alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');
+          return;
+        }
+        recognition = new SpeechRecognition();
+        recognition.lang = 'es-CL';
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.maxAlternatives = 1;
+        var input = document.getElementById('jarvis-input');
+        var mic = document.getElementById('jarvis-mic');
+        recognition.onstart = function() {
+          escuchando = true;
+          mic.classList.add('jarvis-mic-active');
+          mic.textContent = '⏹';
+          input.placeholder = 'Escuchando...';
+          textoInterim = '';
+        };
+        recognition.onresult = function(event) {
+          var transcript = '';
+          for (var i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          input.value = transcript;
+          textoInterim = transcript;
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 80) + 'px';
+        };
+        recognition.onerror = function(e) {
+          console.error('Speech error:', e.error);
+          detenerVoz();
+          if (e.error !== 'aborted') {
+            agregarMensaje('No pude escucharte. Intenta de nuevo.', 'jarvis', false);
+          }
+        };
+        recognition.onend = function() {
+          detenerVoz();
+          if (textoInterim && textoInterim.trim().length > 2) {
+            setTimeout(function() {
+              enviarMensajeChat(textoInterim.trim());
+            }, 300);
+          }
+        };
+        recognition.start();
+      }
+
+      function detenerVoz() {
+        escuchando = false;
+        var mic = document.getElementById('jarvis-mic');
+        var input = document.getElementById('jarvis-input');
+        if (mic) { mic.classList.remove('jarvis-mic-active'); mic.textContent = '🎤'; }
+        if (input) input.placeholder = 'Dictá o escribí...';
+        if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+      }
+
+      // Enter para enviar
+      document.addEventListener('DOMContentLoaded', function() {
+        var input = document.getElementById('jarvis-input');
+        if (input) {
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensajeChat(); }
+          });
+          input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 80) + 'px';
+          });
+        }
+      });
+
+    })();
 
     // Cargar en orden correcto
     loadPatient().then(function(){ loadEvoluciones(); });

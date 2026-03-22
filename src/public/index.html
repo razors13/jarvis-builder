@@ -401,7 +401,7 @@ async function crearPaciente(){
   if(motivo)body.motivo_consulta=motivo;
   if(notas)body.notas_medicas=notas;
   try{
-    var res=await apiFetch(API+'/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var res=await apiFetch('/api/v1/pacientes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     var data=await res.json();
     if(!res.ok){toast(data.error||'Error al crear paciente','error');return;}
     var pacienteId=data.id||(data.paciente&&data.paciente.id);

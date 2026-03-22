@@ -13,7 +13,7 @@ function validatePatient(data, requireAll = true) {
   if (requireAll || data.rut !== undefined) {
     if (!data.rut || typeof data.rut !== 'string')
       errors.push('rut: requerido');
-    else if (!/^\d{7,8}-[\dkK]$/.test(data.rut.trim()))
+    else if (!/^\d{7,8}-[\dkK]$/.test(data.rut.trim().replace(/\s/g, '')))
       errors.push('rut: formato invalido (ej: 12345678-9)');
   }
   if (data.telefono !== undefined && data.telefono !== null) {
@@ -41,15 +41,14 @@ router.get('/', async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (user.role === 'doctor') {
-      // Doctor ve sus propios + los que tiene derivacion aceptada
       const { data: derivs } = await supabase
         .from('derivaciones')
         .select('paciente_id')
         .eq('doctor_destino_id', user.id)
         .in('estado', ['aceptada', 'completada']);
-      
+
       const derivPacientes = (derivs || []).map(d => d.paciente_id);
-      
+
       if (derivPacientes.length > 0) {
         query = query.or(`doctor_id.eq.${user.id},id.in.(${derivPacientes.join(',')})`);
       } else {
@@ -91,16 +90,10 @@ router.get('/:id', async (req, res) => {
       throw error;
     }
 
-    // Admin ve todo
     if (req.user.role === 'admin') return res.json(data);
-
-    // Recepcionista ve datos basicos
     if (req.user.role === 'recepcionista') return res.json(data);
-
-    // Doctor propietario
     if (data.doctor_id === req.user.id) return res.json(data);
 
-    // Doctor con derivacion aceptada
     const { data: deriv } = await supabase
       .from('derivaciones')
       .select('id, acceso_historia')
@@ -111,9 +104,7 @@ router.get('/:id', async (req, res) => {
       .single();
 
     if (deriv && deriv.acceso_historia) {
-      // Sin info financiera para doctor derivado
-      const dataSinFinanciero = { ...data };
-      return res.json(dataSinFinanciero);
+      return res.json({ ...data });
     }
 
     return res.status(403).json({ error: 'No tienes acceso a este paciente' });
@@ -129,10 +120,12 @@ router.post('/', async (req, res) => {
     if (errors.length > 0)
       return res.status(400).json({ error: 'Datos invalidos', detalles: errors });
 
+    const rutLimpio = req.body.rut.trim().replace(/\s/g, '');
+
     const { data: existe } = await supabase
       .from('pacientes')
       .select('id, nombre')
-      .eq('rut', req.body.rut.trim())
+      .eq('rut', rutLimpio)
       .single();
 
     if (existe)
@@ -149,7 +142,7 @@ router.post('/', async (req, res) => {
       .from('pacientes')
       .insert({
         nombre: req.body.nombre.trim(),
-        rut: req.body.rut.trim(),
+        rut: rutLimpio,
         telefono: req.body.telefono?.trim() || null,
         email: req.body.email?.trim().toLowerCase() || null,
         fecha_nacimiento: req.body.fecha_nacimiento || null,
@@ -249,13 +242,12 @@ router.get('/:id/odontograma', async (req, res) => {
     if (req.user.role === 'recepcionista')
       return res.status(403).json({ error: 'No tienes acceso al odontograma' });
 
-    if (req.user.role === 'admin') 
+    if (req.user.role === 'admin')
       return res.json({ id: data.id, nombre: data.nombre, odontograma: data.odontograma || {} });
 
     if (data.doctor_id === req.user.id)
       return res.json({ id: data.id, nombre: data.nombre, odontograma: data.odontograma || {} });
 
-    // Doctor con derivacion aceptada
     const { data: deriv } = await supabase
       .from('derivaciones')
       .select('id')
