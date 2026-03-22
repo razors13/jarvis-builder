@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JARVIS OS — Login</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#0a0a0a;color:#e0e0e0;height:100vh;display:flex;align-items:center;justify-content:center}
+.card{background:#111;border:1px solid #2a2a2a;border-radius:16px;padding:40px;width:360px;max-width:95vw}
+.logo{font-family:'Courier New',monospace;font-size:24px;font-weight:700;letter-spacing:4px;color:#7F77DD;text-align:center;margin-bottom:8px}
+.logo-sub{text-align:center;font-size:12px;color:#666;margin-bottom:32px;font-family:'Courier New',monospace}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+input{width:100%;padding:10px 14px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-size:14px;outline:none;transition:border-color .2s}
+input:focus{border-color:#4e4899}
+.btn{width:100%;padding:12px;background:#7F77DD;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .2s}
+.btn:hover{background:#6B63C5}
+.btn:disabled{background:#333;cursor:not-allowed}
+.error{color:#f87171;font-size:12px;margin-top:12px;text-align:center;display:none}
+.version{text-align:center;font-size:10px;color:#333;margin-top:24px;font-family:'Courier New',monospace}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">⬡ JARVIS OS</div>
+  <div class="logo-sub">Sistema de Gestión Clínica</div>
+  <div class="form-group">
+    <label>Usuario</label>
+    <input type="text" id="username" placeholder="usuario" autocomplete="username">
+  </div>
+  <div class="form-group">
+    <label>Contraseña</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btn-login" onclick="login()">Ingresar</button>
+  <div class="error" id="error-msg"></div>
+  <div class="version">v2.0 — Jarvis OS</div>
+</div>
+<script>
+async function login(){
+  const username=document.getElementById('username').value.trim();
+  const password=document.getElementById('password').value;
+  const btn=document.getElementById('btn-login');
+  const err=document.getElementById('error-msg');
+  if(!username||!password){
+    err.textContent='Completa todos los campos';
+    err.style.display='block';
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='Ingresando...';
+  err.style.display='none';
+  try{
+    const r=await fetch('/api/v1/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username,password})
+    });
+    const d=await r.json();
+    if(!r.ok){
+      err.textContent=d.error||'Error al ingresar';
+      err.style.display='block';
+      btn.disabled=false;
+      btn.textContent='Ingresar';
+      return;
+    }
+    localStorage.setItem('jarvis_token',d.token);
+    localStorage.setItem('jarvis_user',d.username);
+    window.location.href='/index.html';
+  }catch(e){
+    err.textContent='Error de conexion';
+    err.style.display='block';
+    btn.disabled=false;
+    btn.textContent='Ingresar';
+  }
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter')login();
+});
+// Si ya tiene token valido, redirigir al dashboard
+(async function(){
+  const token=localStorage.getItem('jarvis_token');
+  if(!token)return;
+  try{
+    const r=await fetch('/api/v1/auth/verify',{
+      headers:{Authorization:'Bearer '+token}
+    });
+    if(r.ok)window.location.href='/index.html';
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

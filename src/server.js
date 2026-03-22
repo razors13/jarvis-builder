@@ -22,20 +22,34 @@ app.get('/api', (req, res) => {
   res.json({ message: 'JARVIS OS API v2' });
 });
 
+// AUTH — sin protección
+const authRouter = require('./routes/auth');
+app.use('/api/v1/auth', authRouter);
+
+// MIDDLEWARE de autenticación
+const requireAuth = require('./middleware/auth');
+
+// RUTAS PROTEGIDAS
 const describeRouter = require('./routes/describe');
-app.use('/api/v1', describeRouter);
+app.use('/api/v1', requireAuth, describeRouter);
+
 const patientsRouter = require('./routes/patients');
-app.use('/api/v1/pacientes', patientsRouter);
+app.use('/api/v1/pacientes', requireAuth, patientsRouter);
+
 const appointmentsRouter = require('./routes/appointments');
-app.use('/api/v1/citas', appointmentsRouter);
+app.use('/api/v1/citas', requireAuth, appointmentsRouter);
+
 const quotesRouter = require('./routes/quotes');
-app.use('/api/v1/presupuestos', quotesRouter);
+app.use('/api/v1/presupuestos', requireAuth, quotesRouter);
+
 const ordersRouter = require('./routes/orders');
-app.use('/api/v1/pedidos', ordersRouter);
+app.use('/api/v1/pedidos', requireAuth, ordersRouter);
+
 const evolucionesRouter = require('./routes/evoluciones');
-app.use('/api/v1/evoluciones', evolucionesRouter);
+app.use('/api/v1/evoluciones', requireAuth, evolucionesRouter);
+
 const chatRouter = require('./routes/chat');
-app.use('/api/v1/chat', chatRouter);
+app.use('/api/v1/chat', requireAuth, chatRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
