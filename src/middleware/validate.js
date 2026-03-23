@@ -6,7 +6,7 @@ const validateContentType = (req, res, next) => {
   if (req.method === 'POST' || req.method === 'PATCH') {
     const contentType = req.get('Content-Type');
     
-    if (!contentType || !contentType.includes('application/json')) {
+    if (contentType && !contentType.includes('application/json') && !contentType.includes('multipart/form-data')) {
       return res.status(415).json({ 
         error: 'Tipo de contenido no soportado. Se requiere application/json' 
       });

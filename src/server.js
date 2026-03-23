@@ -58,6 +58,9 @@ app.use('/api/v1/evoluciones', requireAuth, evolucionesRouter);
 const chatRouter = require('./routes/chat');
 app.use('/api/v1/chat', requireAuth, chatRouter);
 
+const imagenesRouter = require('./routes/imagenes');
+app.use('/api/v1/imagenes', requireAuth, imagenesRouter);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
