@@ -158,7 +158,7 @@ router.post('/:id/analizar', async (req, res) => {
 
     // Llamar a Claude con vision
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       system: `Eres un asistente de diagnóstico odontológico.
 Analiza esta imagen clínica dental y responde
