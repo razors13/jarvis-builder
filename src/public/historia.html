@@ -173,6 +173,7 @@
         <div class="header-actions">
           <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:var(--text);font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
           <button class="btn-secondary" onclick="verOdontograma()">🦷 Ver Odontograma</button>
+          <button onclick="toggleConsentimientos()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(251,191,36,.4);background:transparent;color:#fbbf24;font-size:13px;font-weight:600;cursor:pointer">📝 Consentimientos</button>
           <button onclick="toggleRecetas()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:transparent;color:#4ade80;font-size:13px;font-weight:600;cursor:pointer">📋 Recetas</button>
           <button id="btn-derivar" onclick="abrirModalDerivar()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(56,189,248,.4);background:transparent;color:#38bdf8;font-size:13px;cursor:pointer">Derivar Paciente</button>
           <button id="btn-nuevo-presupuesto" onclick="togglePresupuesto()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(127,119,221,.4);background:transparent;color:#7F77DD;font-size:13px;cursor:pointer">💰 Presupuesto</button>
@@ -206,6 +207,105 @@
         <thead><tr><th>Fecha</th><th>Tratamiento</th><th>Cobro</th><th>Estado</th></tr></thead>
         <tbody id="fin-tbody"></tbody>
       </table>
+    </div>
+
+    <div id="consentimientos-section" style="display:none;margin-bottom:20px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(251,191,36,.2);padding:16px">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600;color:#fbbf24">
+          📝 Consentimientos Informados
+        </div>
+        <button onclick="mostrarFormConsentimiento()" style="padding:6px 14px;border-radius:6px;border:none;background:#fbbf24;color:#000;font-size:12px;font-weight:600;cursor:pointer">
+          + Nuevo
+        </button>
+      </div>
+
+      <!-- Formulario nuevo consentimiento -->
+      <div id="form-consentimiento" style="display:none;background:var(--bg2);border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:16px;margin-bottom:14px">
+
+        <div style="font-size:13px;font-weight:600;color:#fbbf24;margin-bottom:12px">Nuevo Consentimiento</div>
+
+        <!-- Selector template -->
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Tipo de consentimiento</label>
+          <select id="cons-template" onchange="cargarTemplate(this.value)" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+            <option value="">Seleccionar...</option>
+            <option value="general">Consentimiento General</option>
+            <option value="invasivo">Procedimiento Invasivo</option>
+            <option value="endodoncia">Tratamiento de Conducto</option>
+            <option value="estetica">Procedimiento Estético</option>
+            <option value="menor">Menor de Edad</option>
+          </select>
+        </div>
+
+        <!-- Tratamiento (para reemplazar {{TRATAMIENTO}}) -->
+        <div style="margin-bottom:10px" id="cons-tratamiento-container">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Tratamiento / Procedimiento</label>
+          <input id="cons-tratamiento" type="text" placeholder="Ej: Endodoncia pieza 3.6" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+
+        <!-- Campos menor de edad (solo para template menor) -->
+        <div id="cons-menor-fields" style="display:none;margin-bottom:10px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:10px">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:8px">Datos del tutor/apoderado</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">Nombre tutor</label>
+              <input id="cons-tutor" type="text" placeholder="Nombre completo" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">RUT tutor</label>
+              <input id="cons-rut-tutor" type="text" placeholder="12345678-9" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">Parentesco</label>
+              <select id="cons-parentesco" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+                <option value="padre/madre">Padre/Madre</option>
+                <option value="tutor legal">Tutor legal</option>
+                <option value="abuelo/abuela">Abuelo/Abuela</option>
+                <option value="otro representante legal">Otro representante legal</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">Fecha nac. menor</label>
+              <input id="cons-fecha-nac" type="date" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview del contenido -->
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">Contenido del consentimiento</label>
+          <textarea id="cons-contenido" rows="6" placeholder="Selecciona un tipo de consentimiento..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;outline:none;resize:vertical;font-family:inherit;line-height:1.6"></textarea>
+        </div>
+
+        <!-- Firma -->
+        <div style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;color:#fbbf24;font-weight:600;margin-bottom:8px">✍ Firma del paciente</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">Nombre completo *</label>
+              <input id="cons-nombre-firma" type="text" placeholder="Escribir nombre como firma" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--text-dim);display:block;margin-bottom:3px;text-transform:uppercase">RUT *</label>
+              <input id="cons-rut-firma" type="text" placeholder="12345678-9" style="width:100%;padding:7px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;outline:none">
+            </div>
+          </div>
+          <div style="font-size:10px;color:var(--text-dim);margin-top:6px">
+            Al escribir su nombre y RUT, el paciente acepta este consentimiento electrónicamente. Se registrará IP y timestamp.
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="cancelarConsentimiento()" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;cursor:pointer">Cancelar</button>
+          <button onclick="guardarConsentimiento()" style="padding:8px 18px;border-radius:8px;border:none;background:#fbbf24;color:#000;font-size:13px;font-weight:600;cursor:pointer">
+            Guardar y Firmar
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista consentimientos -->
+      <div id="lista-consentimientos"></div>
     </div>
 
     <div id="recetas-section" style="display:none;margin-bottom:20px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(74,222,128,.2);padding:16px">
@@ -1551,6 +1651,253 @@
         showMessage('Receta eliminada','success');
         cargarRecetas();
       }catch(e){ showMessage('Error de conexion','error'); }
+    }
+
+    // ── MÓDULO DE CONSENTIMIENTOS ──────────────────────────────────
+    var consentimientosData = [];
+    var consTemplates = {};
+
+    async function toggleConsentimientos(){
+      var s = document.getElementById('consentimientos-section');
+      if(s.style.display==='none'){
+        s.style.display='block';
+        if(!Object.keys(consTemplates).length) await cargarTemplates();
+        cargarConsentimientos();
+      } else { s.style.display='none'; }
+    }
+
+    async function cargarTemplates(){
+      try{
+        var r = await apiFetch('/api/v1/consentimientos/templates');
+        consTemplates = await r.json();
+      }catch(e){ console.error(e); }
+    }
+
+    function mostrarFormConsentimiento(){
+      document.getElementById('form-consentimiento').style.display='block';
+      document.getElementById('cons-template').value='';
+      document.getElementById('cons-contenido').value='';
+      document.getElementById('cons-tratamiento').value='';
+      document.getElementById('cons-nombre-firma').value='';
+      document.getElementById('cons-rut-firma').value='';
+      document.getElementById('cons-menor-fields').style.display='none';
+    }
+
+    function cancelarConsentimiento(){
+      document.getElementById('form-consentimiento').style.display='none';
+    }
+
+    function cargarTemplate(tipo){
+      if(!tipo || !consTemplates[tipo]) return;
+      var t = consTemplates[tipo];
+      var nombrePaciente = document.getElementById('patientName').textContent;
+      var rutPaciente = pacienteData ? (pacienteData.rut||'') : '';
+      var doctorNombre = document.querySelector('#session-label') ?
+        document.querySelector('#session-label').textContent : 'Dr.';
+      var fecha = new Date().toLocaleDateString('es-CL',
+        {day:'2-digit',month:'long',year:'numeric'});
+      var tratamiento = document.getElementById('cons-tratamiento').value||'[TRATAMIENTO]';
+      
+      var contenido = t.contenido
+        .replace(/\{\{NOMBRE\}\}/g, nombrePaciente)
+        .replace(/\{\{RUT\}\}/g, rutPaciente||'[RUT]')
+        .replace(/\{\{DOCTOR\}\}/g, doctorNombre)
+        .replace(/\{\{FECHA\}\}/g, fecha)
+        .replace(/\{\{TRATAMIENTO\}\}/g, tratamiento);
+      
+      if(tipo === 'menor'){
+        document.getElementById('cons-menor-fields').style.display='block';
+        contenido = contenido
+          .replace(/\{\{TUTOR\}\}/g, '[NOMBRE TUTOR]')
+          .replace(/\{\{RUT_TUTOR\}\}/g, '[RUT TUTOR]')
+          .replace(/\{\{PARENTESCO\}\}/g, '[PARENTESCO]')
+          .replace(/\{\{FECHA_NAC\}\}/g, '[FECHA NAC]');
+      } else {
+        document.getElementById('cons-menor-fields').style.display='none';
+      }
+      
+      document.getElementById('cons-contenido').value = contenido;
+    }
+
+    document.getElementById('cons-tratamiento') &&
+      document.getElementById('cons-tratamiento').addEventListener('input', function(){
+        var tipo = document.getElementById('cons-template').value;
+        if(tipo) cargarTemplate(tipo);
+      });
+
+    async function guardarConsentimiento(){
+      var tipo = document.getElementById('cons-template').value;
+      var contenido = document.getElementById('cons-contenido').value.trim();
+      var nombreFirma = document.getElementById('cons-nombre-firma').value.trim();
+      var rutFirma = document.getElementById('cons-rut-firma').value.trim();
+      
+      if(!tipo){ showMessage('Selecciona tipo de consentimiento','error'); return; }
+      if(!contenido){ showMessage('El contenido no puede estar vacío','error'); return; }
+      if(!nombreFirma){ showMessage('El nombre de firma es requerido','error'); return; }
+      if(!rutFirma){ showMessage('El RUT de firma es requerido','error'); return; }
+      
+      // Para menor: reemplazar placeholders con datos reales
+      if(tipo === 'menor'){
+        var tutor = document.getElementById('cons-tutor').value.trim();
+        var rutTutor = document.getElementById('cons-rut-tutor').value.trim();
+        var parentesco = document.getElementById('cons-parentesco').value;
+        var fechaNac = document.getElementById('cons-fecha-nac').value;
+        if(!tutor || !rutTutor){ showMessage('Datos del tutor requeridos','error'); return; }
+        contenido = contenido
+          .replace('[NOMBRE TUTOR]', tutor)
+          .replace('[RUT TUTOR]', rutTutor)
+          .replace('[PARENTESCO]', parentesco)
+          .replace('[FECHA NAC]', fechaNac||'No especificada');
+      }
+      
+      try{
+        var r = await apiFetch('/api/v1/consentimientos',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            paciente_id: parseInt(pacienteId),
+            template: tipo,
+            contenido_final: contenido,
+            nombre_firma: nombreFirma,
+            rut_firma: rutFirma
+          })
+        });
+        var data = await r.json();
+        if(!r.ok){ showMessage(data.error||'Error','error'); return; }
+        showMessage('Consentimiento firmado y guardado');
+        cancelarConsentimiento();
+        cargarConsentimientos();
+      }catch(e){ showMessage('Error de conexión','error'); }
+    }
+
+    async function cargarConsentimientos(){
+      try{
+        var r = await apiFetch('/api/v1/consentimientos?paciente_id='+pacienteId);
+        consentimientosData = await r.json();
+        renderListaConsentimientos();
+      }catch(e){ console.error(e); }
+    }
+
+    function renderListaConsentimientos(){
+      var c = document.getElementById('lista-consentimientos');
+      var tipoLabels = {
+        general:'Consentimiento General',
+        invasivo:'Procedimiento Invasivo',
+        endodoncia:'Tratamiento de Conducto',
+        estetica:'Procedimiento Estético',
+        menor:'Menor de Edad'
+      };
+      
+      if(!consentimientosData.length){
+        c.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-dim);font-size:13px">Sin consentimientos registrados</div>';
+        return;
+      }
+      
+      c.innerHTML = consentimientosData.map(function(con){
+        var fecha = new Date(con.created_at).toLocaleDateString('es-CL',
+          {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        return '<div style="background:var(--bg2);border:1px solid var(--border);'+
+          'border-radius:10px;padding:14px;margin-bottom:10px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
+            '<div>'+
+              '<div style="font-size:13px;font-weight:600;color:var(--text)">'+
+                (tipoLabels[con.template]||con.template)+'</div>'+
+              '<div style="font-size:11px;color:var(--text-dim)">'+fecha+'</div>'+
+            '</div>'+
+            '<div style="display:flex;gap:6px;align-items:center">'+
+              '<span style="font-size:10px;background:rgba(74,222,128,.15);color:#4ade80;'+
+                'border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:2px 8px;font-weight:600">'+
+                '✓ Firmado</span>'+
+              '<button onclick="imprimirConsentimiento('+con.id+')" style="padding:4px 10px;'+
+                'border-radius:6px;border:1px solid rgba(251,191,36,.4);'+
+                'background:transparent;color:#fbbf24;font-size:11px;cursor:pointer">'+
+                '🖨 PDF</button>'+
+            '</div>'+
+          '</div>'+
+          '<div style="font-size:11px;color:var(--text-dim)">'+
+            'Firmado por: <span style="color:var(--text);font-weight:600">'+con.nombre_firma+'</span>'+
+            ' · RUT: '+con.rut_firma+
+          '</div>'+
+        '</div>';
+      }).join('');
+    }
+
+    function imprimirConsentimiento(id){
+      var con = consentimientosData.find(function(c){ return c.id===id; });
+      if(!con) return;
+      var nombrePaciente = document.getElementById('patientName').textContent;
+      var fecha = new Date(con.created_at).toLocaleDateString('es-CL',
+        {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      var tipoLabels = {
+        general:'Consentimiento General',invasivo:'Procedimiento Invasivo',
+        endodoncia:'Tratamiento de Conducto',estetica:'Procedimiento Estético',
+        menor:'Menor de Edad'
+      };
+      
+      var contenidoHtml = (con.contenido_final||'').replace(/\n/g,'<br>');
+      
+      var win = window.open('','_blank');
+      win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="UTF-8">
+ <title>Consentimiento — ${nombrePaciente}</title>
+ <style>
+   *{margin:0;padding:0;box-sizing:border-box}
+   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        color:#1a1a1a;padding:40px;font-size:13px;line-height:1.6}
+   .header{display:flex;justify-content:space-between;margin-bottom:24px}
+   .logo{font-size:20px;font-weight:700;color:#7F77DD;letter-spacing:2px}
+   .logo-sub{font-size:10px;color:#888;margin-top:2px}
+   .tipo{font-size:18px;font-weight:700;color:#1a1a1a;text-align:right}
+   .divider{border:none;border-top:2px solid #7F77DD;margin:16px 0}
+   .paciente-box{background:#f9f7ff;border-radius:8px;padding:12px 16px;margin-bottom:20px}
+   .contenido{font-size:13px;line-height:1.8;margin-bottom:30px;
+              white-space:pre-wrap;color:#374151}
+   .firma-section{border-top:1px solid #e5e7eb;padding-top:20px;margin-top:20px}
+   .firma-box{background:#f9f9f9;border-radius:8px;padding:16px;margin-bottom:16px}
+   .firma-nombre{font-size:18px;font-weight:700;color:#1a1a1a;
+                 border-bottom:2px solid #1a1a1a;padding-bottom:4px;
+                 display:inline-block;min-width:200px}
+   .meta{font-size:10px;color:#888;margin-top:6px}
+   @media print{body{padding:20px}}
+ </style>
+</head>
+<body>
+ <div class="header">
+   <div>
+     <div class="logo">⬡ JARVIS OS</div>
+     <div class="logo-sub">Sistema de Gestión Clínica</div>
+   </div>
+   <div>
+     <div class="tipo">${tipoLabels[con.template]||con.template}</div>
+     <div style="font-size:11px;color:#888;text-align:right;margin-top:4px">${fecha}</div>
+   </div>
+ </div>
+ <hr class="divider">
+ <div class="paciente-box">
+   <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888">Paciente</div>
+   <div style="font-size:14px;font-weight:600;margin-top:2px">${nombrePaciente}</div>
+ </div>
+ <div class="contenido">${contenidoHtml}</div>
+ <div class="firma-section">
+   <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;
+               color:#888;margin-bottom:10px">Firma electrónica</div>
+   <div class="firma-box">
+     <div class="firma-nombre">${con.nombre_firma}</div>
+     <div style="font-size:13px;color:#555;margin-top:8px">RUT: ${con.rut_firma}</div>
+     <div class="meta">Firmado electrónicamente el ${fecha}</div>
+     ${con.ip_address?'<div class="meta">IP: '+con.ip_address+'</div>':''}
+   </div>
+   <div style="font-size:10px;color:#888;text-align:center">
+     Este documento tiene validez legal como consentimiento informado electrónico.<br>
+     Jarvis OS — Sistema de Gestión Clínica
+   </div>
+ </div>
+ <script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`);
+      win.document.close();
     }
 
     // Cargar en orden correcto

@@ -64,6 +64,9 @@ app.use('/api/v1/imagenes', requireAuth, imagenesRouter);
 const prescriptionsRouter = require('./routes/prescriptions');
 app.use('/api/v1/prescriptions', requireAuth, prescriptionsRouter);
 
+const consentimientosRouter = require('./routes/consentimientos');
+app.use('/api/v1/consentimientos', requireAuth, consentimientosRouter);
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
