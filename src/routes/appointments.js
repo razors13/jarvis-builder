@@ -262,6 +262,26 @@ router.post('/', async (req, res) => {
       .single();
 
     if (error) throw error;
+    // Enviar recordatorio email si paciente tiene email
+try {
+  const { enviarRecordatorioCita } = require('../lib/email');
+  const { data: pac } = await supabase
+    .from('pacientes')
+    .select('nombre, email')
+    .eq('id', req.body.paciente_id)
+    .single();
+  
+  if(pac && pac.email) {
+    enviarRecordatorioCita({
+      nombrePaciente: pac.nombre,
+      emailPaciente: pac.email,
+      fechaCita: req.body.fecha_hora || req.body.fecha_hora_inicio,
+      tratamiento: req.body.tratamiento || 'Consulta dental',
+      nombreDoctor: req.user.nombre_completo || req.user.nombre || 'Dr.',
+      telefono_clinica: '+56 9 XXXX XXXX'
+    }).catch(console.error);
+  }
+} catch(e) { console.error('Email recordatorio:', e); }
 
     res.status(201).json({ message: 'Cita registrada exitosamente', cita: data });
 
