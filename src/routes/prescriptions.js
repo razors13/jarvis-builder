@@ -36,9 +36,14 @@ router.post('/sugerir', async (req, res) => {
   try {
     const { paciente_id, medicamentos, tratamiento_referencia } = req.body;
 
-    if (!paciente_id || !medicamentos || !Array.isArray(medicamentos) || medicamentos.length === 0) {
+    if (!paciente_id) {
+      return res.status(400).json({ error: 'paciente_id es requerido' });
+    }
+
+    const medArr = medicamentos || [];
+    if (!tratamiento_referencia && !medArr.length) {
       return res.status(400).json({
-        error: 'paciente_id y medicamentos (array no vacío) son requeridos'
+        error: 'Se requiere tratamiento_referencia o medicamentos'
       });
     }
 
@@ -54,10 +59,18 @@ router.post('/sugerir', async (req, res) => {
     }
 
     // Preparar mensaje para Claude
-    const userMessage = `Medicamentos indicados: ${medicamentos.join(', ')}
+    let userMessage;
+    if (medArr.length > 0) {
+      userMessage = `Medicamentos indicados: ${medArr.join(', ')}
 Tratamiento realizado: ${tratamiento_referencia || 'no especificado'}
 Alergias del paciente: ${paciente.alergias || 'ninguna'}
 Notas médicas: ${paciente.notas_medicas || 'ninguna'}`;
+    } else {
+      userMessage = `Tratamiento realizado: ${tratamiento_referencia}
+Sugiere los medicamentos apropiados para este procedimiento dental con posología completa.
+Considera alergias del paciente: ${paciente.alergias || 'ninguna'}
+Notas médicas: ${paciente.notas_medicas || 'ninguna'}`;
+    }
 
     // Llamar a Claude
     const response = await client.messages.create({

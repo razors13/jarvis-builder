@@ -173,6 +173,7 @@
         <div class="header-actions">
           <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent;border:1px solid rgba(255,255,255,.12);border-radius:6px;color:var(--text);font-size:14px;padding:4px 10px;cursor:pointer">☀️</button>
           <button class="btn-secondary" onclick="verOdontograma()">🦷 Ver Odontograma</button>
+          <button onclick="toggleRecetas()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(74,222,128,.4);background:transparent;color:#4ade80;font-size:13px;font-weight:600;cursor:pointer">📋 Recetas</button>
           <button id="btn-derivar" onclick="abrirModalDerivar()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(56,189,248,.4);background:transparent;color:#38bdf8;font-size:13px;cursor:pointer">Derivar Paciente</button>
           <button id="btn-nuevo-presupuesto" onclick="togglePresupuesto()" style="padding:7px 16px;border-radius:8px;border:1px solid rgba(127,119,221,.4);background:transparent;color:#7F77DD;font-size:13px;cursor:pointer">💰 Presupuesto</button>
           <button class="btn-primary" onclick="toggleForm()">+ Nueva Evolución</button>
@@ -205,6 +206,75 @@
         <thead><tr><th>Fecha</th><th>Tratamiento</th><th>Cobro</th><th>Estado</th></tr></thead>
         <tbody id="fin-tbody"></tbody>
       </table>
+    </div>
+
+    <div id="recetas-section" style="display:none;margin-bottom:20px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid rgba(74,222,128,.2);padding:16px">
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600;color:#4ade80">
+          📋 Recetas Clínicas
+        </div>
+        <button onclick="mostrarFormReceta()" style="padding:6px 14px;border-radius:6px;border:none;background:#4ade80;color:#000;font-size:12px;font-weight:600;cursor:pointer">
+          + Nueva Receta
+        </button>
+      </div>
+
+      <!-- Formulario nueva receta -->
+      <div id="form-receta" style="display:none;background:var(--bg2);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:16px;margin-bottom:14px">
+        
+        <div style="font-size:13px;font-weight:600;color:#4ade80;margin-bottom:12px">Nueva Receta</div>
+        
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">
+            Tratamiento realizado (referencia)
+          </label>
+          <input id="receta-tratamiento" type="text"
+            placeholder="Ej: Endodoncia pieza 3.6"
+            style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">
+            Medicamentos (separados por coma)
+          </label>
+          <div style="display:flex;gap:8px">
+            <input id="receta-medicamentos" type="text"
+              placeholder="Opcional: ibuprofeno, amoxicilina..."
+              style="flex:1;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+            <button onclick="sugerirReceta()" style="padding:8px 14px;border-radius:8px;border:none;background:#7F77DD;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">
+              ⬡ Sugerir IA
+            </button>
+          </div>
+        </div>
+
+        <!-- Items de la receta -->
+        <div id="receta-items-container" style="margin-bottom:12px"></div>
+
+        <!-- Advertencias de alergias -->
+        <div id="receta-advertencias" style="display:none;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#f87171"></div>
+
+        <!-- Sugerencias adicionales -->
+        <div id="receta-sugerencias-adicionales" style="display:none;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:10px;margin-bottom:10px"></div>
+
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;color:var(--text-dim);display:block;margin-bottom:4px;text-transform:uppercase">
+            Notas adicionales
+          </label>
+          <textarea id="receta-notas" rows="2"
+            placeholder="Indicaciones generales..."
+            style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;resize:vertical;font-family:inherit"></textarea>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="cancelarReceta()" style="padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;cursor:pointer">Cancelar</button>
+          <button onclick="guardarReceta()" style="padding:8px 18px;border-radius:8px;border:none;background:#4ade80;color:#000;font-size:13px;font-weight:600;cursor:pointer">
+            Guardar Receta
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de recetas -->
+      <div id="lista-recetas"></div>
     </div>
 
     <div id="presupuestos-section" style="display:none;margin-bottom:20px">
@@ -1167,6 +1237,319 @@
         if(!r.ok){ var d=await r.json(); showMessage(d.error||'Error','error'); loadPresupuestos(); return; }
         showMessage('Item actualizado','success');
         loadPresupuestos();
+      }catch(e){ showMessage('Error de conexion','error'); }
+    }
+
+    // ── MÓDULO DE RECETAS ──────────────────────────────────
+    var recetasData = [];
+    var recetaItems = [];
+
+    function toggleRecetas(){
+      var s = document.getElementById('recetas-section');
+      if(s.style.display==='none'){
+        s.style.display='block';
+        cargarRecetas();
+      } else { s.style.display='none'; }
+    }
+
+    function mostrarFormReceta(){
+      recetaItems = [];
+      renderRecetaItems();
+      document.getElementById('form-receta').style.display='block';
+      document.getElementById('receta-advertencias').style.display='none';
+      document.getElementById('receta-sugerencias-adicionales').style.display='none';
+      document.getElementById('receta-tratamiento').value='';
+      document.getElementById('receta-medicamentos').value='';
+      document.getElementById('receta-notas').value='';
+    }
+
+    function cancelarReceta(){
+      document.getElementById('form-receta').style.display='none';
+      recetaItems=[];
+    }
+
+    function renderRecetaItems(){
+      var c=document.getElementById('receta-items-container');
+      if(!recetaItems.length){
+        c.innerHTML='<div style="font-size:12px;color:var(--text-dim);padding:8px 0">Sin medicamentos. Escribe y presiona "Sugerir IA" o agrega manualmente.</div>';
+        return;
+      }
+      c.innerHTML=recetaItems.map(function(item,idx){
+        var advertColor = item.advertencia ? 'rgba(248,113,113,.1)' : 'rgba(255,255,255,.04)';
+        var advertBorder = item.advertencia ? '1px solid rgba(248,113,113,.3)' : '1px solid var(--border)';
+        return '<div style="background:'+advertColor+';border:'+advertBorder+';border-radius:8px;padding:10px;margin-bottom:8px">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
+            '<div style="display:flex;align-items:center;gap:6px">'+
+              '<span style="font-size:13px;font-weight:600;color:var(--text)">'+item.medicamento+'</span>'+
+              (item.sugerido_por_ia?'<span style="font-size:9px;background:rgba(127,119,221,.2);color:#7F77DD;padding:2px 6px;border-radius:4px;font-weight:600">IA</span>':'')+
+            '</div>'+
+            '<button onclick="eliminarItemReceta('+idx+')" style="background:transparent;border:none;color:#f87171;cursor:pointer;font-size:14px">✕</button>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:4px">'+
+            '<div><span style="font-size:10px;color:var(--text-dim)">DOSIS</span><br><span style="font-size:12px;color:var(--text)">'+item.dosis+'</span></div>'+
+            '<div><span style="font-size:10px;color:var(--text-dim)">FRECUENCIA</span><br><span style="font-size:12px;color:var(--text)">c/'+item.frecuencia+'h</span></div>'+
+            '<div><span style="font-size:10px;color:var(--text-dim)">DURACION</span><br><span style="font-size:12px;color:var(--text)">'+item.duracion+' días</span></div>'+
+          '</div>'+
+          (item.indicaciones?'<div style="font-size:11px;color:var(--text-dim)">'+item.indicaciones+'</div>':'')+
+          (item.advertencia?'<div style="font-size:11px;color:#f87171;margin-top:4px">⚠ '+item.advertencia+'</div>':'')+
+        '</div>';
+      }).join('');
+    }
+
+    function eliminarItemReceta(idx){
+      recetaItems.splice(idx,1);
+      renderRecetaItems();
+    }
+
+    async function sugerirReceta(){
+      var meds = document.getElementById('receta-medicamentos').value.trim();
+      var trat = document.getElementById('receta-tratamiento').value.trim();
+      showMessage('Jarvis analizando...');
+      try{
+        var medArr = meds.split(',').map(function(m){ return m.trim(); }).filter(Boolean);
+        var r = await apiFetch('/api/v1/prescriptions/sugerir',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            paciente_id: parseInt(pacienteId),
+            medicamentos: medArr,
+            tratamiento_referencia: trat||null
+          })
+        });
+        var data = await r.json();
+        if(!r.ok){ showMessage(data.error||'Error','error'); return; }
+        
+        recetaItems = data.items || [];
+        renderRecetaItems();
+        
+        // Advertencias alergias
+        var advEl = document.getElementById('receta-advertencias');
+        if(data.advertencias_alergias){
+          advEl.textContent = '⚠ ' + data.advertencias_alergias;
+          advEl.style.display = 'block';
+        } else { advEl.style.display = 'none'; }
+        
+        // Sugerencias adicionales
+        var sugEl = document.getElementById('receta-sugerencias-adicionales');
+        if(data.sugerencias_adicionales && data.sugerencias_adicionales.length){
+          sugEl.style.display = 'block';
+          sugEl.innerHTML = '<div style="font-size:11px;font-weight:600;color:#38bdf8;margin-bottom:6px">Jarvis sugiere agregar:</div>'+
+            data.sugerencias_adicionales.map(function(s){
+              return '<div style="display:flex;justify-content:space-between;align-items:center;'+
+                'padding:6px 8px;background:rgba(255,255,255,.04);border-radius:6px;margin-bottom:4px">'+
+                '<div>'+
+                  '<span style="font-size:12px;font-weight:600;color:var(--text)">'+s.medicamento+'</span>'+
+                  '<span style="font-size:11px;color:var(--text-dim);margin-left:6px">'+s.razon+'</span>'+
+                '</div>'+
+                '<button onclick="agregarSugerencia('+JSON.stringify(s).replace(/"/g,"'")+',this)" '+
+                  'style="padding:3px 10px;border-radius:6px;border:none;background:#38bdf8;'+
+                  'color:#000;font-size:11px;font-weight:600;cursor:pointer">Agregar</button>'+
+              '</div>';
+            }).join('');
+        } else { sugEl.style.display='none'; }
+        
+        showMessage('Posologia sugerida por Jarvis');
+      }catch(e){ showMessage('Error de conexion','error'); }
+    }
+
+    function agregarSugerencia(s, btn){
+      recetaItems.push({
+        medicamento: s.medicamento,
+        dosis: s.dosis,
+        frecuencia: s.frecuencia,
+        duracion: s.duracion,
+        indicaciones: s.indicaciones,
+        sugerido_por_ia: true,
+        advertencia: null
+      });
+      btn.textContent = '✓';
+      btn.disabled = true;
+      btn.style.background = '#4ade80';
+      renderRecetaItems();
+    }
+
+    async function guardarReceta(){
+      if(!recetaItems.length){ showMessage('Agrega al menos un medicamento','error'); return; }
+      var trat = document.getElementById('receta-tratamiento').value.trim();
+      var notas = document.getElementById('receta-notas').value.trim();
+      try{
+        var r = await apiFetch('/api/v1/prescriptions',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            paciente_id: parseInt(pacienteId),
+            items: recetaItems,
+            notas: notas||null,
+            tratamiento_referencia: trat||null
+          })
+        });
+        var d = await r.json();
+        if(!r.ok){ showMessage(d.error||'Error al guardar','error'); return; }
+        showMessage('Receta guardada exitosamente','success');
+        cancelarReceta();
+        cargarRecetas();
+      }catch(e){ showMessage('Error de conexion','error'); }
+    }
+
+    async function cargarRecetas(){
+      try{
+        var r = await apiFetch('/api/v1/prescriptions?paciente_id='+pacienteId);
+        recetasData = await r.json();
+        renderListaRecetas();
+      }catch(e){ console.error(e); }
+    }
+
+    function renderListaRecetas(){
+      var c = document.getElementById('lista-recetas');
+      var header = '<div style="display:flex;justify-content:space-between;'+
+        'align-items:center;margin-bottom:10px">'+
+        '<div style="font-size:14px;font-weight:600;color:#4ade80">Historial</div>'+
+      '</div>';
+      
+      if(!recetasData.length){
+        c.innerHTML = header+'<div style="text-align:center;padding:20px;'+
+          'color:var(--text-dim);font-size:13px">Sin recetas registradas</div>';
+        return;
+      }
+      
+      var cards = recetasData.map(function(rec){
+        var fecha = new Date(rec.created_at).toLocaleDateString("es-CL",
+          {day:"2-digit",month:"short",year:"numeric"});
+        var itemsHtml = (rec.items||[]).map(function(item){
+          return '<div style="display:flex;justify-content:space-between;'+
+            'align-items:center;padding:5px 8px;background:var(--bg3);'+
+            'border-radius:6px;margin-bottom:3px">'+
+            '<div>'+
+              '<span style="font-size:12px;font-weight:600;color:var(--text)">'+
+                item.medicamento+'</span>'+
+              '<span style="font-size:11px;color:var(--text-dim);margin-left:6px">'+
+                item.dosis+' c/'+item.frecuencia+'h — '+item.duracion+' días</span>'+
+            '</div>'+
+            (item.sugerido_por_ia?'<span style="font-size:9px;background:rgba(127,119,221,.2);'+
+              'color:#7F77DD;padding:2px 6px;border-radius:4px">IA</span>':'')+
+          '</div>';
+        }).join('');
+        
+        return '<div style="background:var(--bg2);border:1px solid var(--border);'+
+          'border-radius:10px;padding:14px;margin-bottom:10px">'+
+          '<div style="display:flex;justify-content:space-between;'+
+            'align-items:center;margin-bottom:10px">'+
+            '<div>'+
+              '<div style="font-size:13px;font-weight:600;color:var(--text)">'+
+                fecha+'</div>'+
+              (rec.tratamiento_referencia?'<div style="font-size:11px;color:var(--text-dim)">'+
+                rec.tratamiento_referencia+'</div>':'')+
+            '</div>'+
+            '<button onclick="imprimirReceta('+rec.id+')" style="padding:4px 10px;'+
+              'border-radius:6px;border:1px solid rgba(74,222,128,.4);'+
+              'background:transparent;color:#4ade80;font-size:11px;cursor:pointer">'+
+              '🖨 PDF</button>'+
+          '</div>'+
+          itemsHtml+
+          (rec.notas?'<div style="font-size:11px;color:var(--text-dim);margin-top:8px;'+
+            'padding-top:8px;border-top:1px solid var(--border)">'+rec.notas+'</div>':'')+
+        '</div>';
+      }).join('');
+      
+      c.innerHTML = header + cards;
+    }
+
+    function imprimirReceta(id){
+      var rec = recetasData.find(function(r){ return r.id===id; });
+      if(!rec) return;
+      var nombrePaciente = document.getElementById('patientName').textContent;
+      var fecha = new Date(rec.created_at).toLocaleDateString('es-CL',
+        {day:'2-digit',month:'long',year:'numeric'});
+      
+      var itemsHtml = (rec.items||[]).map(function(item,idx){
+        return '<div style="margin-bottom:16px;padding-bottom:16px;'+
+          'border-bottom:1px solid #e5e7eb">'+
+          '<div style="font-size:14px;font-weight:700;margin-bottom:4px">'+
+            (idx+1)+'. '+item.medicamento+
+            (item.dosis?' '+item.dosis:'')+
+          '</div>'+
+          '<div style="font-size:13px;color:#374151;margin-bottom:2px">'+
+            'Tomar cada '+item.frecuencia+' horas por '+item.duracion+' días'+
+          '</div>'+
+          (item.indicaciones?'<div style="font-size:12px;color:#6B7280">'+
+            item.indicaciones+'</div>':'')+
+          (item.advertencia?'<div style="font-size:12px;color:#DC2626;margin-top:4px">'+
+            '⚠ '+item.advertencia+'</div>':'')+
+        '</div>';
+      }).join('');
+      
+      var win = window.open('','_blank');
+      win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+ <meta charset="UTF-8">
+ <title>Receta — ${nombrePaciente}</title>
+ <style>
+   * { margin:0; padding:0; box-sizing:border-box; }
+   body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+          color:#1a1a1a; padding:40px; font-size:14px; }
+   .header { display:flex; justify-content:space-between;
+             align-items:flex-start; margin-bottom:30px; }
+   .logo { font-size:22px; font-weight:700; color:#7F77DD; letter-spacing:2px; }
+   .logo-sub { font-size:11px; color:#888; margin-top:3px; }
+   .rec-num { text-align:right; }
+   .rec-num h2 { font-size:18px; color:#7F77DD; }
+   .rec-num p { font-size:11px; color:#888; margin-top:3px; }
+   .divider { border:none; border-top:2px solid #7F77DD; margin:16px 0; }
+   .paciente { background:#f9f7ff; border-radius:8px; padding:12px 16px;
+               margin-bottom:24px; }
+   .paciente label { font-size:10px; text-transform:uppercase;
+                     letter-spacing:1px; color:#888; }
+   .paciente p { font-size:14px; font-weight:600; margin-top:2px; }
+   .rp { font-size:28px; font-weight:700; color:#7F77DD;
+         margin-bottom:20px; }
+   .footer { margin-top:40px; padding-top:20px;
+             border-top:1px solid #e5e7eb; }
+   .firma { margin-top:40px; }
+   .firma-linea { width:200px; border-top:1px solid #1a1a1a;
+                  margin-bottom:4px; }
+   .firma p { font-size:11px; color:#888; }
+   @media print { body { padding:20px; } }
+ </style>
+</head>
+<body>
+ <div class="header">
+   <div>
+     <div class="logo">⬡ JARVIS OS</div>
+     <div class="logo-sub">Sistema de Gestión Clínica</div>
+   </div>
+   <div class="rec-num">
+     <h2>RECETA MÉDICA</h2>
+     <p>Fecha: ${fecha}</p>
+   </div>
+ </div>
+ <hr class="divider">
+ <div class="paciente">
+   <label>Paciente</label>
+   <p>${nombrePaciente}</p>
+   ${pacienteData && pacienteData.rut ? '<label style="margin-top:4px;display:block">RUT</label><p>'+pacienteData.rut+'</p>' : ''}
+   ${rec.tratamiento_referencia?'<label style="margin-top:6px;display:block">Tratamiento</label><p>'+rec.tratamiento_referencia+'</p>':''}
+ </div>
+ <div class="rp">Rp.</div>
+ ${itemsHtml}
+ ${rec.notas?'<div style="margin-top:16px;padding:12px;background:#f9fafb;border-radius:8px;font-size:13px;color:#374151">'+rec.notas+'</div>':''}
+ <div class="firma">
+   <div class="firma-linea"></div>
+   <p>Firma y timbre del profesional</p>
+ </div>
+ <script>window.onload=function(){window.print();}<\/script>
+</body>
+</html>`);
+      win.document.close();
+    }
+
+    async function eliminarReceta(id){
+      if(!confirm('¿Eliminar esta receta?')) return;
+      try{
+        var r = await apiFetch('/api/v1/prescriptions/'+id,{method:'DELETE'});
+        if(!r.ok){ var d=await r.json(); showMessage(d.error||'Error','error'); return; }
+        showMessage('Receta eliminada','success');
+        cargarRecetas();
       }catch(e){ showMessage('Error de conexion','error'); }
     }
 
