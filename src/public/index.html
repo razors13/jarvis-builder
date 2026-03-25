@@ -433,45 +433,12 @@ window.buscarPacientes=function(term){
 var userRole = '';
 var userName = '';
 
-// Verificar autenticacion al cargar
-(async function checkAuth(){
-  if(!TOKEN){window.location.href='/login.html';return;}
-  try{
-    var r=await apiFetch(API+'/auth/verify');
-    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';return;}
-    var d=await r.json();
-    userRole = d.role || '';
-    userName = d.nombre || d.username || '';
-    
-    // Mostrar nombre en el header
-    var sessionLabel = document.getElementById('session-label');
-    if(sessionLabel) sessionLabel.textContent = userName;
-    
-    // Aplicar restricciones por rol
-    aplicarRol(userRole);
-    
-    // Guardar ID de usuario y cargar derivaciones pendientes
-    window._userId = d.id;
-    cargarDerivacionesPendientes();
-  }catch(e){window.location.href='/login.html';}
-})();
-
 function aplicarRol(role){
-  // Recepcionista no ve ThinkOf ni Sistema
-  if(role === 'recepcionista'){
-    var tabThinkof = document.querySelector('[data-tab="thinkof"]');
-    var tabSistema = document.querySelector('[data-tab="sistema"]');
-    if(tabThinkof) tabThinkof.style.display = 'none';
-    if(tabSistema) tabSistema.style.display = 'none';
-  }
-  
-  // Admin ve el link de administración
   if(role === 'admin'){
     var linkAdmin = document.getElementById('link-admin');
     if(linkAdmin) linkAdmin.style.display = 'inline';
   }
-  
-  // Badge de rol en el header
+
   var badge = document.getElementById('badge-modelo');
   if(badge && role){
     var colores = {
@@ -480,6 +447,41 @@ function aplicarRol(role){
       recepcionista: 'rgba(251,191,36,0.15)'
     };
     badge.style.background = colores[role] || colores.admin;
+  }
+
+  if(role === 'doctor'){
+    var tabThinkof = document.querySelector('[data-tab="thinkof"]');
+    var tabSistema = document.querySelector('[data-tab="sistema"]');
+    if(tabThinkof) tabThinkof.style.display = 'none';
+    if(tabSistema) tabSistema.style.display = 'none';
+    var mainEl = document.querySelector('main');
+    if(mainEl) mainEl.style.gridTemplateColumns = '0.4fr 1fr';
+    setTimeout(function(){
+      var btnCitas = document.getElementById('btn-citas');
+      if(btnCitas) btnCitas.click();
+    }, 800);
+    var chatEmpty = document.getElementById('chat-empty');
+    if(chatEmpty){
+      chatEmpty.innerHTML = '<div style="font-size:24px;opacity:0.3">⬡</div>'+
+        '<p style="font-family:var(--mono);font-size:11px;letter-spacing:1px">JARVIS listo</p>';
+    }
+  }
+
+  if(role === 'recepcionista'){
+    var tabThinkof = document.querySelector('[data-tab="thinkof"]');
+    var tabSistema = document.querySelector('[data-tab="sistema"]');
+    if(tabThinkof) tabThinkof.style.display = 'none';
+    if(tabSistema) tabSistema.style.display = 'none';
+    var panelChat = document.querySelector('.panel-chat');
+    if(panelChat) panelChat.style.display = 'none';
+    var mainEl = document.querySelector('main');
+    if(mainEl) mainEl.style.gridTemplateColumns = '1fr';
+    setTimeout(function(){
+      var btnCitas = document.getElementById('btn-citas');
+      if(btnCitas) btnCitas.click();
+    }, 800);
+    var btnNuevo = document.getElementById('btn-nuevo-paciente');
+    if(btnNuevo) btnNuevo.style.display = 'none';
   }
 }
 
@@ -490,15 +492,27 @@ async function cargarDerivacionesPendientes(){
     var total=d.total||0;
     var badge=el('badge-derivaciones');
     if(badge){
-      if(total>0){
-        badge.textContent=total;
-        badge.style.display='inline';
-      } else {
-        badge.style.display='none';
-      }
+      if(total>0){badge.textContent=total;badge.style.display='inline';}
+      else{badge.style.display='none';}
     }
   }catch(e){}
 }
+
+(async function checkAuth(){
+  if(!TOKEN){window.location.href='/login.html';return;}
+  try{
+    var r=await apiFetch(API+'/auth/verify');
+    if(!r.ok){localStorage.removeItem('jarvis_token');window.location.href='/login.html';return;}
+    var d=await r.json();
+    userRole = d.role || '';
+    userName = d.nombre || d.username || '';
+    var sessionLabel = document.getElementById('session-label');
+    if(sessionLabel) sessionLabel.textContent = userName;
+    aplicarRol(userRole);
+    window._userId = d.id;
+    cargarDerivacionesPendientes();
+  }catch(e){window.location.href='/login.html';}
+})();
 
 function el(id){return document.getElementById(id);}
 function formatDate(iso){if(!iso)return'-';try{return new Date(iso).toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return iso;}}
@@ -728,21 +742,17 @@ el('btn-derivaciones').addEventListener('click', async function(){
     var res=await apiFetch(API+'/derivaciones');
     var data=await res.json();
     var derivaciones=data.derivaciones||[];
-    
     el('derivaciones-count').textContent=derivaciones.length+' registros';
     var list=el('derivaciones-list');
     list.innerHTML='';
-    
     if(derivaciones.length===0){
       list.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-dim);font-size:12px">Sin derivaciones</div>';
     } else {
       derivaciones.forEach(function(d){
         var card=document.createElement('div');
         card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px';
-        
         var estadoColor={pendiente:'#fbbf24',aceptada:'#4ade80',completada:'#38bdf8',rechazada:'#f87171'};
         var color=estadoColor[d.estado]||'#888';
-        
         card.innerHTML=
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
             '<div style="font-size:13px;font-weight:600;color:var(--text)">'+(d.paciente&&d.paciente.nombre||'Paciente')+'</div>'+
@@ -762,11 +772,9 @@ el('btn-derivaciones').addEventListener('click', async function(){
             '<div style="margin-top:8px">'+
               '<button onclick="completarDerivacion('+d.id+')" style="padding:4px 10px;border-radius:6px;border:none;background:#38bdf8;color:#000;font-size:11px;cursor:pointer;font-weight:600">Marcar Completada</button>'+
             '</div>' : '');
-        
         list.appendChild(card);
       });
     }
-    
     el('derivaciones-container').style.display='block';
     el('clinica-result').style.display='none';
   }catch(err){toast('Error: '+err.message,'error');}
@@ -775,11 +783,7 @@ el('btn-derivaciones').addEventListener('click', async function(){
 
 window.responderDerivacion=async function(id,estado){
   try{
-    var r=await apiFetch(API+'/derivaciones/'+id,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({estado:estado})
-    });
+    var r=await apiFetch(API+'/derivaciones/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado:estado})});
     if(!r.ok){var d=await r.json();toast(d.error||'Error','error');return;}
     toast(estado==='aceptada'?'Derivacion aceptada':'Derivacion rechazada','success');
     el('btn-derivaciones').click();
@@ -789,11 +793,7 @@ window.responderDerivacion=async function(id,estado){
 window.completarDerivacion=async function(id){
   var notas=prompt('Notas de retorno para el doctor (opcional):');
   try{
-    var r=await apiFetch(API+'/derivaciones/'+id,{
-      method:'PATCH',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({estado:'completada',notas_retorno:notas||null})
-    });
+    var r=await apiFetch(API+'/derivaciones/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({estado:'completada',notas_retorno:notas||null})});
     if(!r.ok){var d=await r.json();toast(d.error||'Error','error');return;}
     toast('Derivacion completada','success');
     el('btn-derivaciones').click();
@@ -803,4 +803,3 @@ window.completarDerivacion=async function(id){
 window.cargarTodosPacientes();
 chatInput.focus();
 })();
-</script>
