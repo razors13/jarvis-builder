@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 require('dotenv').config();
 
 const app = express();
@@ -28,6 +28,7 @@ app.get(['/', '/index.html'], (req, res) => {
 
 // Luego archivos estaticos
 app.use(express.static(path.join(__dirname, 'public'), {
+  index: false,
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
