@@ -65,9 +65,11 @@ async function login(){
       btn.textContent='Ingresar';
       return;
     }
-    localStorage.setItem('jarvis_token',d.token);
+    localStorage.removeItem('jarvis_token');
+localStorage.removeItem('jarvis_user');
+localStorage.setItem('jarvis_token',d.token);
     localStorage.setItem('jarvis_user',d.username);
-    window.location.href='/index.html';
+    window.location.replace('/index.html');
   }catch(e){
     err.textContent='Error de conexion';
     err.style.display='block';
@@ -86,7 +88,7 @@ document.addEventListener('keydown',function(e){
     const r=await fetch('/api/v1/auth/verify',{
       headers:{Authorization:'Bearer '+token}
     });
-    if(r.ok)window.location.href='/index.html';
+    if(r.ok)window.location.replace('/index.html');
   }catch(e){}
 })();
 </script>
