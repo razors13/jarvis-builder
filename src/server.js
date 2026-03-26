@@ -10,22 +10,8 @@ const validateContentType = require('./middleware/validate');
 app.use(validateContentType);
 app.use(limiter);
 const path = require('path');
-const fs = require('fs');
-
-app.get(['/', '/index.html'], (req, res) => {
-  const filePath = path.join(__dirname, 'public', 'index.html');
-  const content = fs.readFileSync(filePath, 'utf8');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.send(content);
-});
-
-app.use(express.static(path.join(__dirname, 'public'), { index: false, etag: false }));
-
+app.use(express.static(path.join(__dirname, 'public')));
 app.get('/api', (req, res) => { res.json({ message: 'JARVIS OS API v2' }); });
-
 const authRouter = require('./routes/auth');
 app.use('/api/v1/auth', authRouter);
 const requireAuth = require('./middleware/auth');
@@ -53,14 +39,11 @@ const prescriptionsRouter = require('./routes/prescriptions');
 app.use('/api/v1/prescriptions', requireAuth, prescriptionsRouter);
 const consentimientosRouter = require('./routes/consentimientos');
 app.use('/api/v1/consentimientos', requireAuth, consentimientosRouter);
-
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
-
 if (require.main === module) {
   app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
 }
-
 module.exports = app;
