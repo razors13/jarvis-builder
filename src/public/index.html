@@ -400,9 +400,9 @@ function aplicarRol(role, userId) {
     var panelChat = document.querySelector('.panel-chat');
     if (panelChat) {
       panelChat.innerHTML = '<div class="panel-title"><span>AGENDA SEMANAL</span><span id="session-label" style="font-size:10px;color:var(--purple)">' + name + '</span></div><div id="agenda-container" style="flex:1;display:flex;flex-direction:column;overflow:hidden"></div>';
-      window.AgendaSemanal.init(document.getElementById('agenda-container'));
-    }
-  }
+    if (window.AgendaSemanal) {
+  window.AgendaSemanal.init(document.getElementById('agenda-container'));
+}
 
   if (role === 'recepcionista') {
     var t1 = document.querySelector('[data-tab="thinkof"]');
