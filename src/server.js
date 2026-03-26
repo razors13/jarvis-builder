@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 require('dotenv').config();
 
 const app = express();
@@ -17,7 +17,16 @@ app.use(validateContentType);
 app.use(limiter);
 
 const path = require('path');
-app.use(express.static(path.join(__dirname, 'public')));
+app.use((req, res, next) => { if (req.path.endsWith('.html') || req.path === '/') { res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate'); res.setHeader('Pragma', 'no-cache'); } next(); });
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 app.get('/api', (req, res) => {
   res.json({ message: 'JARVIS OS API v2' });
