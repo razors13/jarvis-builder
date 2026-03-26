@@ -378,8 +378,13 @@ function aplicarRol(role, userId) {
     var t2 = document.querySelector('[data-tab="sistema"]');
     if (t1) t1.style.display = 'none';
     if (t2) t2.style.display = 'none';
-    document.querySelector('main').style.gridTemplateColumns = '0.4fr 1fr';
-    setTimeout(function() { el('btn-citas').click(); }, 800);
+    document.querySelector('main').style.gridTemplateColumns = '0.38fr 1fr';
+    // Reemplazar panel chat por agenda semanal
+    var panelChat = document.querySelector('.panel-chat');
+    if (panelChat) {
+      panelChat.innerHTML = '<div class="panel-title"><span>AGENDA SEMANAL</span><span id="session-label" style="font-size:10px;color:var(--purple)">' + name + '</span></div><div id="agenda-container" style="flex:1;display:flex;flex-direction:column;overflow:hidden"></div>';
+      window.AgendaSemanal.init(document.getElementById('agenda-container'));
+    }
   }
 
   if (role === 'recepcionista') {
@@ -726,6 +731,217 @@ async function completarDerivacion(id) {
     el('btn-derivaciones').click();
   } catch(e) { toast('Error de conexion', 'error'); }
 }
+</script>
+<script>
+// AGENDA SEMANAL - Componente para panel doctor
+// Se inyecta en el panel izquierdo reemplazando el chat
+
+window.AgendaSemanal = (function() {
+  var currentWeekStart = null;
+  var allCitas = [];
+
+  function getWeekStart(date) {
+    var d = new Date(date);
+    var day = d.getDay();
+    var diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lunes
+    d.setDate(diff);
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  function formatDateISO(date) {
+    return date.getFullYear() + '-' +
+      String(date.getMonth()+1).padStart(2,'0') + '-' +
+      String(date.getDate()).padStart(2,'0');
+  }
+
+  function formatHour(isoString) {
+    try {
+      var d = new Date(isoString);
+      return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    } catch(e) { return '--:--'; }
+  }
+
+  function getDayName(date) {
+    var days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    return days[date.getDay()];
+  }
+
+  function getDayNum(date) {
+    return String(date.getDate()).padStart(2,'0');
+  }
+
+  function isToday(date) {
+    var today = new Date();
+    return date.getFullYear() === today.getFullYear() &&
+           date.getMonth() === today.getMonth() &&
+           date.getDate() === today.getDate();
+  }
+
+  async function loadWeekCitas(weekStart) {
+    var citas = [];
+    for (var i = 0; i < 6; i++) { // Lun a Sáb
+      var d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      var iso = formatDateISO(d);
+      try {
+        var token = localStorage.getItem('jarvis_token') || '';
+        var r = await fetch('/api/v1/citas?fecha=' + iso, {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        var data = await r.json();
+        if (data.citas) {
+          data.citas.forEach(function(c) { c._fecha = iso; citas.push(c); });
+        }
+      } catch(e) {}
+    }
+    return citas;
+  }
+
+  function renderAgenda(container, citas, weekStart) {
+    var days = [];
+    for (var i = 0; i < 6; i++) {
+      var d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+
+    var weekLabel = '';
+    var weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 5);
+    weekLabel = getDayNum(weekStart) + ' ' + weekStart.toLocaleString('es-CL',{month:'short'}) +
+      ' — ' + getDayNum(weekEnd) + ' ' + weekEnd.toLocaleString('es-CL',{month:'short',year:'numeric'});
+
+    container.innerHTML = [
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg2)">',
+        '<button id="agenda-prev" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text-dim);padding:3px 8px;cursor:pointer;font-size:14px">&#8249;</button>',
+        '<span style="font-family:var(--mono);font-size:11px;color:var(--purple);letter-spacing:1px">' + weekLabel + '</span>',
+        '<button id="agenda-next" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--text-dim);padding:3px 8px;cursor:pointer;font-size:14px">&#8250;</button>',
+      '</div>',
+      '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border);flex:1;overflow-y:auto">',
+        days.map(function(d) {
+          var iso = formatDateISO(d);
+          var dCitas = citas.filter(function(c) { return c._fecha === iso; });
+          var isHoy = isToday(d);
+          return [
+            '<div style="background:var(--bg);padding:6px;min-height:80px">',
+              '<div style="font-family:var(--mono);font-size:9px;text-align:center;margin-bottom:4px;padding:3px;border-radius:4px;' +
+                (isHoy ? 'background:var(--purple);color:#fff;' : 'color:var(--text-dim);') + '">',
+                '<div style="font-size:11px;font-weight:700">' + getDayNum(d) + '</div>',
+                '<div>' + getDayName(d) + '</div>',
+              '</div>',
+              dCitas.map(function(c) {
+                var estados = {programada:'var(--purple)',confirmada:'var(--green)',completada:'var(--text-dim)',cancelada:'var(--red)'};
+                var color = estados[c.estado] || 'var(--purple)';
+                return '<div class="agenda-cita" data-id="' + c.id + '" style="' +
+                  'background:' + color + '22;border-left:2px solid ' + color + ';' +
+                  'padding:3px 4px;border-radius:3px;margin-bottom:3px;cursor:pointer;' +
+                  'font-size:9px;font-family:var(--mono);line-height:1.4">' +
+                  '<div style="font-weight:700;color:' + color + '">' + formatHour(c.fecha_hora_inicio) + '</div>' +
+                  '<div style="color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (c.tratamiento || 'Cita') + '</div>' +
+                  '</div>';
+              }).join(''),
+            '</div>'
+          ].join('');
+        }).join(''),
+      '</div>',
+      '<div style="padding:10px 14px;border-top:1px solid var(--border);background:var(--bg2)">',
+        '<button id="agenda-nueva-cita" style="width:100%;padding:8px;background:var(--purple);border:none;border-radius:6px;color:#fff;font-family:var(--mono);font-size:12px;cursor:pointer;font-weight:600">+ Nueva Cita</button>',
+      '</div>'
+    ].join('');
+
+    // Eventos
+    document.getElementById('agenda-prev').addEventListener('click', function() {
+      currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+      init(container);
+    });
+    document.getElementById('agenda-next').addEventListener('click', function() {
+      currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+      init(container);
+    });
+    document.getElementById('agenda-nueva-cita').addEventListener('click', function() {
+      showModalNuevaCita();
+    });
+    container.querySelectorAll('.agenda-cita').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var id = parseInt(this.dataset.id);
+        var cita = citas.find(function(c) { return c.id === id; });
+        if (cita) showDetalleCita(cita);
+      });
+    });
+  }
+
+  function showDetalleCita(cita) {
+    var modal = document.getElementById('modal-detalle-cita');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-detalle-cita';
+      modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;align-items:center;justify-content:center';
+      modal.innerHTML = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;width:340px;max-width:90vw">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+          '<h3 style="font-family:var(--mono);font-size:14px;color:var(--purple)">Detalle Cita</h3>' +
+          '<button id="cerrar-detalle-cita" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px">×</button>' +
+        '</div>' +
+        '<div id="detalle-cita-content" style="font-family:var(--mono);font-size:12px;color:var(--text)"></div>' +
+        '<div style="margin-top:14px;display:flex;gap:8px">' +
+          '<button id="btn-ver-paciente-cita" style="flex:1;padding:7px;background:var(--purple);border:none;border-radius:6px;color:#fff;font-size:12px;cursor:pointer;font-family:var(--mono)">Ver Paciente</button>' +
+          '<button id="btn-historia-cita" style="flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;font-family:var(--mono)">Historia</button>' +
+        '</div>' +
+      '</div>';
+      document.body.appendChild(modal);
+      document.getElementById('cerrar-detalle-cita').addEventListener('click', function() {
+        modal.style.display = 'none';
+      });
+      modal.addEventListener('click', function(e) { if (e.target === modal) modal.style.display = 'none'; });
+    }
+
+    var fecha = new Date(cita.fecha_hora_inicio);
+    var content = document.getElementById('detalle-cita-content');
+    content.innerHTML = [
+      '<div style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:6px">',
+        '<div style="color:var(--text-dim);font-size:10px;margin-bottom:2px">FECHA Y HORA</div>',
+        '<div style="color:var(--text)">' + fecha.toLocaleDateString('es-CL') + ' — ' + formatHour(cita.fecha_hora_inicio) + '</div>',
+      '</div>',
+      '<div style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:6px">',
+        '<div style="color:var(--text-dim);font-size:10px;margin-bottom:2px">TRATAMIENTO</div>',
+        '<div style="color:var(--text)">' + (cita.tratamiento || '—') + '</div>',
+      '</div>',
+      '<div style="margin-bottom:8px;padding:8px;background:var(--bg3);border-radius:6px">',
+        '<div style="color:var(--text-dim);font-size:10px;margin-bottom:2px">DURACIÓN</div>',
+        '<div style="color:var(--text)">' + (cita.duracion_minutos || 30) + ' min</div>',
+      '</div>',
+      '<div style="padding:8px;background:var(--bg3);border-radius:6px">',
+        '<div style="color:var(--text-dim);font-size:10px;margin-bottom:2px">ESTADO</div>',
+        '<div style="color:var(--purple)">' + (cita.estado || '—') + '</div>',
+      '</div>',
+    ].join('');
+
+    document.getElementById('btn-ver-paciente-cita').onclick = function() {
+      window.location.href = '/odontograma.html?paciente_id=' + cita.paciente_id;
+    };
+    document.getElementById('btn-historia-cita').onclick = function() {
+      window.location.href = '/historia.html?paciente_id=' + cita.paciente_id;
+    };
+
+    modal.style.display = 'flex';
+  }
+
+  function showModalNuevaCita() {
+    // Redirigir a agenda completa o mostrar modal rápido
+    window.location.href = '/agenda.html';
+  }
+
+  async function init(container) {
+    if (!currentWeekStart) currentWeekStart = getWeekStart(new Date());
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:12px;color:var(--text-dim)"><span class="spinner"></span>&nbsp;Cargando agenda...</div>';
+    var citas = await loadWeekCitas(currentWeekStart);
+    allCitas = citas;
+    renderAgenda(container, citas, currentWeekStart);
+  }
+
+  return { init: init };
+})();
+
 </script>
 </body>
 </html>
