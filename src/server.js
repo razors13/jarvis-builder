@@ -28,6 +28,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 
+app.get(['/', '/index.html'], (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 app.get('/api', (req, res) => {
   res.json({ message: 'JARVIS OS API v2' });
 });
