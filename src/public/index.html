@@ -333,6 +333,7 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
+window.logout=function(){localStorage.removeItem('jarvis_token');localStorage.removeItem('jarvis_user');window.location.href='/login.html';};
 // ─── GLOBALES ───────────────────────────────────────────
 var API='/api/v1';
 var SESSION_ID='dashboard_kevin';
