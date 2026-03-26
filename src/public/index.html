@@ -341,7 +341,7 @@ var TOKEN=localStorage.getItem('jarvis_token')||'';
 function apiFetch(url,options){
   options=options||{};
   options.headers=options.headers||{};
-  options.headers['Authorization']='Bearer '+TOKEN;
+  options.headers['Authorization']='Bearer '+(localStorage.getItem('jarvis_token')||'');
   return fetch(url,options);
 }
 
