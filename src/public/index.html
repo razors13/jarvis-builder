@@ -345,7 +345,7 @@ function apiFetch(url,options){
   return fetch(url,options);
 }
 
-window.logout=function(){
+function logout(){
   localStorage.removeItem('jarvis_token');
   localStorage.removeItem('jarvis_user');
   window.location.href='/login.html';
